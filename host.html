@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>위블 사이트 흉내 (개발용)</title>
+    <style>
+      body { margin: 0; padding: 16px; font: 14px/1.5 -apple-system, sans-serif; background: #f4f5f8; display: grid; gap: 12px; }
+      .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .frames { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+      .mobile { width: 390px; height: 760px; }
+      .desktop { width: 960px; aspect-ratio: 16 / 9; }
+      iframe { border: 0; border-radius: 16px; background: #fff; box-shadow: 0 2px 12px #0001; display: block; }
+      pre { margin: 0; padding: 12px; background: #1d2433; color: #cfe; border-radius: 8px; max-height: 160px; overflow: auto; }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <strong>위블 사이트 흉내</strong> — iframe 안에서 postMessage 규약을 시험합니다 (개발 서버 전용, 빌드에 포함 안 됨)
+      <label>theme <select id="theme"><option>horror</option><option>default</option></select></label>
+      <button id="reload">처음부터</button>
+    </div>
+    <div class="frames">
+      <iframe class="mobile" title="모바일"></iframe>
+      <iframe class="desktop" title="PC 16:9"></iframe>
+    </div>
+    <pre id="log"></pre>
+    <script type="module">
+      const slug = "store";
+      const frames = [...document.querySelectorAll("iframe")];
+      const log = (msg) => (document.querySelector("#log").textContent = `${new Date().toLocaleTimeString()} ${msg}\n` + document.querySelector("#log").textContent);
+      const load = () => frames.forEach((f) => (f.src = "/?run=" + Date.now()));
+
+      window.addEventListener("message", (event) => {
+        const frame = frames.find((f) => f.contentWindow === event.source);
+        const data = event.data;
+        if (!frame || data?.source !== "psytest-game") return;
+        if (data.type === "ready") {
+          frame.contentWindow.postMessage({ source: "psytest-host", type: "init", slug, theme: document.querySelector("#theme").value }, event.origin);
+        } else if (data.type === "result") {
+          log(`[${frame.title}] result → 사이트라면 /t/${slug}/result/${data.resultId} 로 이동`);
+        }
+      });
+      document.querySelector("#reload").onclick = load;
+      document.querySelector("#theme").onchange = load;
+      load();
+    </script>
+  </body>
+</html>

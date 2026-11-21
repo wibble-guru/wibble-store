@@ -1,0 +1,107 @@
+# 심야 편의점 (wibble-store)
+
+「심야 편의점」: 마지막 손님 — 나폴리탄 괴담 × 선택형 성향 테스트.
+위블 사이트에 iframe으로 들어가는 게임. 구조는 위블 법정(wibble-court)과 같다. Vite + React + TypeScript, pnpm.
+
+## 시작하기
+
+```bash
+pnpm install
+pnpm dev          # http://localhost:5181
+```
+
+| 주소 | 용도 |
+|---|---|
+| `http://localhost:5181/` | 게임 단독 실행 (개발 서버에서만 가능). `?theme=horror&slug=store`로 사이트 값을 흉내 낼 수 있음 |
+| `http://localhost:5181/host.html` | 위블 사이트 흉내: 모바일·PC 16:9 iframe 두 개로 postMessage 규약을 시험 (개발 서버 전용, 빌드에 안 들어감) |
+
+같은 와이파이의 휴대폰에서는 `http://<맥 IP>:5181`으로 열면 됩니다.
+
+```bash
+pnpm build        # 타입 검사 + dist/ 생성 (정적 파일, 어디든 올리면 됨)
+pnpm preview      # 운영 빌드라 단독으로 열면 막힌 화면이 나옵니다
+pnpm check:types  # 모든 선택 조합(65,536개)으로 유형·엔딩 분포와 끊긴 장면을 검사
+pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·효과음·목소리 녹음 대본)
+```
+
+## 사이트 연동
+
+`src/bridge.ts`는 위블 법정과 같은 규약이다(slug만 `store`).
+
+1. 게임이 `ready`를 300ms마다 보냄 → 사이트가 `init { slug, theme }` 응답
+2. 게임이 끝나면 `sendResult(resultId)` → 사이트가 `/t/{slug}/result/{resultId}`로 이동
+
+- 운영 빌드는 사이트 안에서만 실행된다. 8초 안에 `init`이 오지 않으면 "위블에서 플레이하기" 안내(`Gate.tsx`).
+- **결과 id(`src/game/script.ts`의 `TYPES[].id`)는 지금 임시값 `store-01`~`store-16`이다.** 콘텐츠 서버에 등록된 id로 바꿔야 한다.
+- 운영 빌드에는 `VITE_ALLOWED_HOST_ORIGINS=https://<사이트 도메인>`, 배포 서버에는 `Content-Security-Policy: frame-ancestors https://<사이트 도메인>`.
+
+## 매장 화면 (원근 보정)
+
+배경은 늘 계산대 뒤에서 본 매장이다(`src/view/PanoramaView.tsx`).
+
+- 240° 원통형 파노라마(`src/assets/store/pano.webp`)를 화면 픽셀마다 다시 투영해 **직선이 곧게 보이는 원근 화면**으로 그린다(WebGL). 이게 기본값이고, `panini` 값을 주면 가장자리 늘어남을 줄일 수 있다.
+- 화면 비율을 따라간다: 모바일 세로(가로 화각 약 49°) / PC 16:9(약 111°).
+- 장면마다 `look`(정면·출입문·화장실·CCTV …)으로 시선을 돌리고, 플레이어는 ‹ › 버튼이나 드래그로 둘러볼 수 있다. 버튼이 멈추는 칸은 세로 5칸, 가로 3칸(`src/view/projection.ts`의 `STOPS`).
+- 지금 파노라마는 **3D 블록아웃 렌더(색 가이드)**다. 실사 파노라마가 나오면 같은 파일 이름으로 바꾸면 된다. 단, 같은 240° 원통형 구도여야 맞게 보정된다.
+  - 3D 모델과 렌더: annotation 저장소 `design/Game gate/night-store-scene/3d/`
+  - 분위기·팔레트: 같은 폴더의 `mood/MOOD.md`
+
+## 스토리 데이터
+
+`src/game/script.ts`에 노션 스토리 바이블 v3.0을 그대로 옮겼다. 대사를 고칠 때는 이 파일만 바꾸면 된다.
+
+| 항목 | 위치 |
+|---|---|
+| 장면(INTRO, Q1~Q8, 결과 장면, 전환 장면, 엔딩, 진실 공개) | `NODES` |
+| 조건부 대사 `[조건: counter=WITNESS]` | 장면 `lines` 안의 `{ if, lines }` |
+| 저장 변수 `저장: shelf=BOX` | 장면의 `set` |
+| 엔딩 뒤 추가 장면(기획서 6절) | `EXTRAS` |
+| 문항별 점수표(주요 +2 / 보조 +1) | 선택지의 `score` |
+| 16가지 유형 | `TYPES` |
+
+## 연출 큐 (컷씬·CCTV·소리)
+
+대본 `lines` 안에서 대사 **바로 앞**에 큐를 두면, 그 대사가 화면에 나올 때 실행된다. 쓸 수 있는 id는 `src/game/media.ts`의 목록뿐이다(타입 검사).
+
+```ts
+{ sfx: "snack-drop" }, "툭.",
+{ cut: "q1-pickup" }, "과자를 주워 제자리에 올려놓는다.",
+{ cctv: "q2c-replay" }, { sfx: "cctv-rewind" }, "조금 전 영상으로 되돌린다.",
+{ voice: "woman", via: "door" }, "\"밖에 아직 계세요?\"",
+```
+
+| 큐 | 뜻 |
+|---|---|
+| `cut` | 1인칭 동작 컷씬 |
+| `cctv` | CCTV 모달을 열거나 화면을 바꾼다. `null`이면 닫는다. 장면이 바뀌면 자동으로 닫힌다 |
+| `fx` | 매장 화면 위에 얹는 연출 (터진 거품, 안내판, 발자국 …) |
+| `sfx` / `amb` | 효과음 / 덧씌우는 환경음. 기본 환경음은 장소(`place`)가 정한다 |
+| `voice` | 다음 대사를 녹음한 목소리로. 파일 이름은 `장면id.순번` (조건과 상관없이 대본 순서) |
+
+- 장면의 `place: "outside"`부터는 매장 밖이다(Q7-A, Q7-B, Q8-OUT, END-EXIT). **실외 배경은 아직 없다.**
+- 지금은 자리만 잡혀 있다. 개발 서버에서만 화면 왼쪽 위에 현재 큐가 글자로 뜬다. 컷씬·CCTV 모달·휴대폰 화면 디자인은 Figma에서 확정한 뒤 만들고, 그림·소리 파일이 생기면 `media.ts`의 `file`을 채운다.
+- 제작용 목록과 녹음 대본은 `pnpm cues`로 만드는 `docs/CUES.md`를 본다.
+
+유형 판정(`src/game/engine.ts`의 `decideType`): 1위 성향이 2위보다 4점 이상 높으면 단독형, 아니면 1위→2위 조합형. 동점이면 주요 성향으로 고른 횟수, 그래도 같으면 최근 선택 순.
+
+> 진실 공개(TRUTH-GATE~03)는 결과를 사이트로 보내기 **전에** 보여 준다. 사이트로 결과를 보내면 결과 페이지로 이동해 버리기 때문이다. 기획서는 "결과 공개 후"라서, 결과 페이지 쪽에서 보여 줄지 정해야 한다.
+
+## 구조
+
+```
+src/
+  bridge.ts             사이트 ↔ 게임 postMessage (위블 법정과 같음)
+  Gate.tsx              단독 실행 막힌 화면 (위블 법정과 같음)
+  App.tsx               화면 흐름: 연결 → 타이틀 → 장면 → 결과
+  game/engine.ts        상태·조건·점수·유형 판정 (순수 함수)
+  game/script.ts        스토리 데이터 + 연출 큐 위치
+  game/media.ts         연출 목록 (컷씬, CCTV 칸·장면, 화면 연출, 효과음, 환경음, 목소리 배역)
+  view/PanoramaView.tsx 원근 보정 매장 화면
+  view/projection.ts    투영 수식, 파노라마 규격, 시선 칸
+  styles.css            팔레트(MOOD.md), 세로·가로 레이아웃
+scripts/coverage.ts     선택 조합 전수 검사
+scripts/cues.ts         큐 시트(docs/CUES.md) 생성
+host.html               개발용 사이트 흉내
+```
+
+화면 디자인(대사창, 선택지, 타이틀)은 기능 확인용이다. 실제 UI는 Figma에서 확정한 뒤 바꾼다.
