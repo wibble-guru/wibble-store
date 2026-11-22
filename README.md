@@ -1,7 +1,8 @@
 # 심야 편의점 (wibble-store)
 
 「심야 편의점」: 마지막 손님 — 나폴리탄 괴담 × 선택형 성향 테스트.
-위블 사이트에 iframe으로 들어가는 게임. 구조는 위블 법정(wibble-court)과 같다. Vite + React + TypeScript, pnpm.
+위블 사이트에 iframe으로 들어가는 게임. Vite + Preact + TypeScript, pnpm.
+사이트 연동·막힌 화면·공통 스타일·호스트 시뮬레이터는 위블 법정(wibble-court)과 같이 [`@wibble-guru/boilerplate`](https://www.npmjs.com/package/@wibble-guru/boilerplate)를 쓴다.
 
 ## 시작하기
 
@@ -26,12 +27,12 @@ pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·효과�
 
 ## 사이트 연동
 
-`src/bridge.ts`는 위블 법정과 같은 규약이다(slug만 `store`).
+`@wibble-guru/boilerplate`가 위블 사이트와의 규약을 구현한다. 이 게임의 설정은 `src/wibble.ts`(`defineWibbleGame`, slug `store`, 단독 실행 기본 테마 `horror`)와 `vite.config.ts`(`wibble({ slug, port, theme })`)에 있다.
 
 1. 게임이 `ready`를 300ms마다 보냄 → 사이트가 `init { slug, theme }` 응답
-2. 게임이 끝나면 `sendResult(resultId)` → 사이트가 `/t/{slug}/result/{resultId}`로 이동
+2. 게임이 끝나면 `game.sendResult(resultId)` → 사이트가 `/t/{slug}/result/{resultId}`로 이동
 
-- 운영 빌드는 사이트 안에서만 실행된다. 8초 안에 `init`이 오지 않으면 "위블에서 플레이하기" 안내(`Gate.tsx`).
+- 운영 빌드는 사이트 안에서만 실행된다. 8초 안에 `init`이 오지 않으면 "위블에서 플레이하기" 안내(boilerplate의 `WibbleGate`). 연결 중에도 매장 배경을 보여 주려고 `WibbleFrame` 대신 `useWibbleHost`를 쓴다.
 - **결과 id(`src/game/script.ts`의 `TYPES[].id`)는 지금 임시값 `store-01`~`store-16`이다.** 콘텐츠 서버에 등록된 id로 바꿔야 한다.
 - 운영 빌드에는 `VITE_ALLOWED_HOST_ORIGINS=https://<사이트 도메인>`, 배포 서버에는 `Content-Security-Policy: frame-ancestors https://<사이트 도메인>`.
 
@@ -91,8 +92,8 @@ pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·효과�
 
 ```
 src/
-  bridge.ts             사이트 ↔ 게임 postMessage (위블 법정과 같음)
-  Gate.tsx              단독 실행 막힌 화면 (위블 법정과 같음)
+  main.tsx              진입점 + 공통 base.css
+  wibble.ts             사이트 연동 설정 (slug, 단독 실행 기본 테마)
   App.tsx               화면 흐름: 연결 → 타이틀 → 장면 → 결과
   game/engine.ts        상태·조건·점수·유형 판정 (순수 함수)
   game/script.ts        스토리 데이터 + 연출 큐 위치
@@ -103,7 +104,8 @@ src/
   styles.css            팔레트(MOOD.md), 세로·가로 레이아웃
 scripts/coverage.ts     선택 조합 전수 검사
 scripts/cues.ts         큐 시트(docs/CUES.md) 생성
-host.html               개발용 사이트 흉내
 ```
+
+훅은 `preact/hooks`에서 가져온다. Preact 코어에는 `StrictMode`가 없고, 마운트 때 `autoFocus`를 대신 처리해 주지 않으므로 필요하면 ref로 직접 `focus()`한다.
 
 화면 디자인(대사창, 선택지, 타이틀)은 기능 확인용이다. 실제 UI는 Figma에서 확정한 뒤 바꾼다.

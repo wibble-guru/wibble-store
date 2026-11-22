@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { TargetedPointerEvent } from "preact";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import panoUrl from "../assets/store/pano.webp";
 import { FRAG, PANO, STOPS, VERT, geometry } from "./projection";
 
@@ -168,13 +169,13 @@ export function PanoramaView({ lookDeg, panini = 0 }: Props) {
     if (target !== undefined) animateTo(target);
   }
 
-  function onPointerDown(e: React.PointerEvent) {
+  function onPointerDown(e: TargetedPointerEvent<HTMLDivElement>) {
     if ((e.target as HTMLElement).closest("button")) return;
     cancelAnimationFrame(animRef.current);
     dragRef.current = { x: e.clientX, yaw: yawRef.current };
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
   }
-  function onPointerMove(e: React.PointerEvent) {
+  function onPointerMove(e: TargetedPointerEvent<HTMLDivElement>) {
     const drag = dragRef.current;
     const c = canvasRef.current;
     if (!drag || !c) return;
