@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Gate } from "./Gate";
 import { INIT_TIMEOUT_MS, connectToHost, sendResult, type HostContext } from "./bridge";
 import {
@@ -16,6 +16,7 @@ import {
 } from "./game/engine";
 import { CUTS, SHOTS, type Place, type ShotId } from "./game/media";
 import { EXTRAS, NODES, START, TYPES } from "./game/script";
+import { CctvMonitor } from "./view/CctvMonitor";
 import { PanoramaView } from "./view/PanoramaView";
 
 type Phase =
@@ -154,6 +155,16 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     return shot;
   }, [beats, lineIdx]);
   const asking = done && !!node.question;
+  // CCTV 모니터가 대사창에 가리지 않도록 대사창 높이를 잰다
+  const panelRef = useRef<HTMLElement>(null);
+  const [panelH, setPanelH] = useState(0);
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setPanelH(el.getBoundingClientRect().height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (node.look) onLook(SPOTS[node.look]);
@@ -182,6 +193,13 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
 
   return (
     <>
+      {cctv && <div className="cctv-dim" />}
+      {cctv && (
+        <div className="cctv-layer" style={{ bottom: panelH + 24 }}>
+          <CctvMonitor shot={cctv} clock={clock} />
+        </div>
+      )}
+
       <header className="hud">
         <span className="clock">{clock}</span>
         <span className="where">
@@ -192,7 +210,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
 
       {import.meta.env.DEV && <CueDebug beat={beats[lineIdx]} cctv={cctv} place={place} />}
 
-      <section className={`panel${asking ? " asking" : ""}`}>
+      <section ref={panelRef} className={`panel${asking ? " asking" : ""}`}>
         {!asking ? (
           <button className="lines" onClick={advance} autoFocus aria-label="다음">
             {shown.map((l, i) => (
@@ -230,7 +248,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
 function CueDebug({ beat, cctv, place }: { beat?: Beat; cctv: ShotId | null; place: Place }) {
   const items: string[] = [];
   if (place === "outside") items.push("장소: 매장 밖 (실외 배경 없음)");
-  if (cctv) items.push(`CCTV ${SHOTS[cctv].cam} ${SHOTS[cctv].mode} · ${cctv}`);
+  if (cctv) items.push(`CCTV ${SHOTS[cctv].cam} ${SHOTS[cctv].mode} · ${cctv} — ${SHOTS[cctv].desc}`);
   for (const c of beat?.cues ?? []) {
     if ("cut" in c) items.push(`컷씬 ${c.cut} — ${CUTS[c.cut].desc}`);
     else if ("fx" in c) items.push(`연출 ${c.fx}`);

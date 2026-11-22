@@ -42,7 +42,7 @@ pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·효과�
 - 240° 원통형 파노라마(`src/assets/store/pano.webp`)를 화면 픽셀마다 다시 투영해 **직선이 곧게 보이는 원근 화면**으로 그린다(WebGL). 이게 기본값이고, `panini` 값을 주면 가장자리 늘어남을 줄일 수 있다.
 - 화면 비율을 따라간다: 모바일 세로(가로 화각 약 49°) / PC 16:9(약 111°).
 - 장면마다 `look`(정면·출입문·화장실·CCTV …)으로 시선을 돌리고, 플레이어는 ‹ › 버튼이나 드래그로 둘러볼 수 있다. 버튼이 멈추는 칸은 세로 5칸, 가로 3칸(`src/view/projection.ts`의 `STOPS`).
-- 지금 파노라마는 **3D 블록아웃 렌더(색 가이드)**다. 실사 파노라마가 나오면 같은 파일 이름으로 바꾸면 된다. 단, 같은 240° 원통형 구도여야 맞게 보정된다.
+- 지금 파노라마는 annotation 저장소의 `panorama-v6.webp`(2016×780)다. 3D 블록아웃 렌더를 가이드로 생성해 구도가 같다. 배경을 바꿀 때도 **같은 240° 원통형 구도**(3D 렌더와 겹치는 그림)여야 맞게 보정된다.
   - 3D 모델과 렌더: annotation 저장소 `design/Game gate/night-store-scene/3d/`
   - 분위기·팔레트: 같은 폴더의 `mood/MOOD.md`
 
@@ -79,7 +79,8 @@ pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·효과�
 | `voice` | 다음 대사를 녹음한 목소리로. 파일 이름은 `장면id.순번` (조건과 상관없이 대본 순서) |
 
 - 장면의 `place: "outside"`부터는 매장 밖이다(Q7-A, Q7-B, Q8-OUT, END-EXIT). **실외 배경은 아직 없다.**
-- 지금은 자리만 잡혀 있다. 개발 서버에서만 화면 왼쪽 위에 현재 큐가 글자로 뜬다. 컷씬·CCTV 모달·휴대폰 화면 디자인은 Figma에서 확정한 뒤 만들고, 그림·소리 파일이 생기면 `media.ts`의 `file`을 채운다.
+- CCTV 모달은 기능 확인용으로 붙어 있다(`src/view/CctvMonitor.tsx`): 4분할 모니터(CAM1 CAM2 / CAM5 CAM4)에서 장면의 카메라 칸을 강조하고 영상 상태를 표시한다. 칸 안 그림은 CCTV 영상이 생기기 전까지 파노라마를 잘라 쓴다.
+- 나머지 큐는 자리만 잡혀 있다. 개발 서버에서만 화면 왼쪽 위에 현재 큐가 글자로 뜬다. 컷씬·휴대폰 화면과 CCTV 모달의 최종 디자인은 Figma에서 확정한 뒤 만들고, 그림·소리 파일이 생기면 `media.ts`의 `file`을 채운다.
 - 제작용 목록과 녹음 대본은 `pnpm cues`로 만드는 `docs/CUES.md`를 본다.
 
 유형 판정(`src/game/engine.ts`의 `decideType`): 1위 성향이 2위보다 4점 이상 높으면 단독형, 아니면 1위→2위 조합형. 동점이면 주요 성향으로 고른 횟수, 그래도 같으면 최근 선택 순.
@@ -97,6 +98,7 @@ src/
   game/script.ts        스토리 데이터 + 연출 큐 위치
   game/media.ts         연출 목록 (컷씬, CCTV 칸·장면, 화면 연출, 효과음, 환경음, 목소리 배역)
   view/PanoramaView.tsx 원근 보정 매장 화면
+  view/CctvMonitor.tsx  CCTV 모달 (4분할 모니터)
   view/projection.ts    투영 수식, 파노라마 규격, 시선 칸
   styles.css            팔레트(MOOD.md), 세로·가로 레이아웃
 scripts/coverage.ts     선택 조합 전수 검사

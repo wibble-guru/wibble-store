@@ -43,7 +43,7 @@ export const SPOTS = {
   door: -48,
   window: -95,
   restroom: 62,
-  cctv: 180,
+  cctv: 87,
 } as const;
 export type Spot = keyof typeof SPOTS;
 
