@@ -3,6 +3,7 @@
  * 배경은 늘 원근 보정된 매장(PanoramaView), 그 위에 대사·선택지를 얹는다.
  * 색은 annotation 저장소 design/Game gate/night-store-scene/mood/MOOD.md 팔레트.
  * ※ 화면 디자인은 아직 기능 확인용. 실제 UI는 Figma에서 확정한 뒤 바꾼다.
+ * 리셋·body·SUIT 폰트는 @wibble-guru/boilerplate/base.css(main.tsx), 막힌 화면 스타일은 WibbleGate가 불러온다.
  */
 :root {
   --night: #0b1a1c;
@@ -20,37 +21,6 @@
   --primary: var(--counter);
   --primary-ink: #10200a;
   color-scheme: dark;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
-}
-
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: "SUIT", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-  word-break: keep-all;
-  /* 모바일에서 더블탭 확대·텍스트 선택이 게임 조작을 방해하지 않게 */
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-button {
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
 }
 
 .game {
@@ -348,19 +318,6 @@ button {
   font-size: 17px;
 }
 
-.dev-badge {
-  position: fixed;
-  right: 8px;
-  top: 8px;
-  margin: 0;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: #0008;
-  color: #fff;
-  font: 11px/1.4 ui-monospace, monospace;
-  pointer-events: none;
-}
-
 /* ---------------------------------------------------------------- CCTV 모달 (기능 확인용) */
 .cctv-dim {
   position: absolute;
@@ -564,137 +521,4 @@ button {
   border-radius: 6px;
   background: #000a;
   color: var(--glow);
-}
-
-/*
- * 부정 사용 안내 (Figma 394:991). 값은 Figma 노드 그대로 — 모바일(390) 기준, 768px부터 PC(1440).
- * 게임 테마와 상관없이 위블 공통 화면이라 색을 직접 쓴다.
- */
-@font-face {
-  font-family: "SUIT Variable";
-  src: url("./assets/fonts/SUIT-Variable.woff2") format("woff2-variations"),
-    url("./assets/fonts/SUIT-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-
-.gate {
-  /* body가 overflow: hidden이라, 낮은 화면(가로 모드 휴대폰)에서는 이 안에서 스크롤 */
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: max(48px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom));
-  background: #f3f8ff;
-  color: #1d2b45;
-  font-family: "SUIT Variable", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-  text-align: center;
-  word-break: keep-all;
-  overflow-y: auto;
-  user-select: text;
-  -webkit-user-select: text;
-}
-
-.gate-logo {
-  display: block;
-  width: 120.656px;
-  height: auto;
-}
-
-.gate-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 342px;
-}
-
-.gate-mascot,
-.gate-mascot img {
-  display: block;
-  width: 152px;
-  height: 152px;
-}
-
-.gate h1 {
-  margin: 16px 0 0;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.3;
-  letter-spacing: -0.6px;
-}
-
-.gate-body {
-  margin: 8px 0 0;
-  color: #4a5a73;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.6;
-}
-
-.gate-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin-top: 32px;
-  padding: 16px 32px;
-  border-radius: 12px;
-  background: #1f73cc;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: -0.16px;
-  text-decoration: none;
-}
-
-.gate-btn:hover {
-  background: #1a64b3;
-}
-
-.gate-btn:focus-visible {
-  outline: 3px solid #9cc7f5;
-  outline-offset: 2px;
-}
-
-.gate footer {
-  color: #617088;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.5;
-  letter-spacing: -0.18px;
-}
-
-@media (min-width: 768px) {
-  .gate-logo {
-    width: 152.844px;
-  }
-  .gate-content {
-    max-width: none;
-  }
-  .gate-mascot,
-  .gate-mascot img {
-    width: 203px;
-    height: 203px;
-  }
-  .gate h1 {
-    margin-top: 20px;
-    font-size: 38px;
-    letter-spacing: -0.95px;
-  }
-  .gate-body {
-    margin-top: 0;
-    font-size: 18px;
-    line-height: 1.65;
-  }
-  .gate-mobile-break {
-    display: none;
-  }
-  .gate-btn {
-    width: auto;
-    margin-top: 40px;
-  }
 }

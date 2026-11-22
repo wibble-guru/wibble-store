@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "preact/hooks";
 import { CAMS, SHOTS, type CamId, type ShotId } from "../game/media";
 import pano from "../assets/store/pano.webp";
 import { PANO } from "./projection";

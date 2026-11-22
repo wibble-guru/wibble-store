@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Gate } from "./Gate";
-import { INIT_TIMEOUT_MS, connectToHost, sendResult, type HostContext } from "./bridge";
+import { WibbleDevBadge, WibbleGate, useWibbleHost } from "@wibble-guru/boilerplate";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   SPOTS,
   applyChoice,
@@ -18,64 +17,41 @@ import { CUTS, SHOTS, type Place, type ShotId } from "./game/media";
 import { EXTRAS, NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
 import { PanoramaView } from "./view/PanoramaView";
+import { game } from "./wibble";
 
 type Phase =
-  | { kind: "connecting" }
-  | { kind: "blocked" }
   | { kind: "title" }
   | { kind: "play" }
   | { kind: "result"; type: PersonalityType; state: GameState; sent: boolean };
 
+/**
+ * 화면 흐름: 연결 → 타이틀 → 장면 → 결과.
+ * 연결 중에도 매장 배경을 보여 주려고 WibbleFrame 대신 useWibbleHost를 쓴다.
+ * (8초 안에 init이 없으면 막힌 화면, 그 뒤에 init이 와도 이어서 시작 · <html data-theme> 반영은 boilerplate가 맡는다)
+ */
 export function App() {
-  const [host, setHost] = useState<HostContext | null>(null);
-  const [phase, setPhase] = useState<Phase>({ kind: "connecting" });
+  const { status, host } = useWibbleHost(game);
+  const [phase, setPhase] = useState<Phase>({ kind: "title" });
   const [look, setLook] = useState<number>(SPOTS.counter);
-
-  useEffect(() => {
-    const connection = connectToHost();
-    if (!connection) {
-      setPhase({ kind: "blocked" });
-      return;
-    }
-    let alive = true;
-    // 사이트가 늦게 뜨는 경우를 위해, 막힌 화면을 띄운 뒤에도 init이 오면 이어서 시작한다.
-    const timer = window.setTimeout(() => {
-      setPhase((p) => (p.kind === "connecting" ? { kind: "blocked" } : p));
-    }, INIT_TIMEOUT_MS);
-    connection.then((ctx) => {
-      if (!alive) return;
-      window.clearTimeout(timer);
-      setHost(ctx);
-      setPhase({ kind: "title" });
-    });
-    return () => {
-      alive = false;
-      window.clearTimeout(timer);
-    };
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = host?.theme ?? "horror";
-  }, [host?.theme]);
 
   function finish(state: GameState) {
     const type = decideType(state.scores, state.picks, TYPES);
-    setPhase({ kind: "result", type, state, sent: sendResult(type.id) });
+    setPhase({ kind: "result", type, state, sent: game.sendResult(type.id) });
   }
 
-  if (phase.kind === "blocked") return <Gate />;
+  if (status === "blocked") return <WibbleGate game={game} />;
 
   return (
     <main className="game">
       <PanoramaView lookDeg={look} />
 
-      {phase.kind === "connecting" && (
+      {status === "connecting" && (
         <div className="overlay">
           <p className="hint">사이트와 연결하는 중…</p>
         </div>
       )}
 
-      {phase.kind === "title" && (
+      {status === "ready" && phase.kind === "title" && (
         <div className="overlay">
           <section className="title">
             <p className="eyebrow">WIBBLE NIGHT SHIFT</p>
@@ -123,11 +99,7 @@ export function App() {
         </div>
       )}
 
-      {host && !host.embedded && (
-        <p className="dev-badge">
-          standalone · slug={host.slug} · theme={host.theme}
-        </p>
-      )}
+      {host && !host.embedded && <WibbleDevBadge host={host} />}
     </main>
   );
 }
@@ -155,6 +127,11 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     return shot;
   }, [beats, lineIdx]);
   const asking = done && !!node.question;
+  // 대사창 버튼에 포커스 (Preact는 React와 달리 마운트 때 autoFocus를 대신 처리해 주지 않는다)
+  const linesRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!asking) linesRef.current?.focus();
+  }, [asking]);
   // CCTV 모니터가 대사창에 가리지 않도록 대사창 높이를 잰다
   const panelRef = useRef<HTMLElement>(null);
   const [panelH, setPanelH] = useState(0);
@@ -195,7 +172,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     <>
       {cctv && <div className="cctv-dim" />}
       {cctv && (
-        <div className="cctv-layer" style={{ bottom: panelH + 24 }}>
+        <div className="cctv-layer" style={{ bottom: `${panelH + 24}px` }}>
           <CctvMonitor shot={cctv} clock={clock} />
         </div>
       )}
@@ -212,7 +189,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
 
       <section ref={panelRef} className={`panel${asking ? " asking" : ""}`}>
         {!asking ? (
-          <button className="lines" onClick={advance} autoFocus aria-label="다음">
+          <button ref={linesRef} className="lines" onClick={advance} aria-label="다음">
             {shown.map((l, i) => (
               <Line key={`${node.id}-${lineIdx - shown.length + 1 + i}`} text={l} current={i === shown.length - 1} />
             ))}

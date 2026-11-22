@@ -1,12 +1,8 @@
+import preact from "@preact/preset-vite";
+import { wibble } from "@wibble-guru/boilerplate/vite";
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 
+// wibble(): 상대 경로 빌드(base "./"), 휴대폰 접속용 server.host, 호스트 시뮬레이터 /host.html
 export default defineConfig({
-  plugins: [react()],
-  // 게임은 서브 경로(https://games.wibble.guru/store/)에 올라갈 수 있으니 상대 경로로 빌드
-  base: "./",
-  server: {
-    port: 5181,
-    host: true, // 같은 와이파이의 휴대폰에서 http://<맥 IP>:5181 으로 테스트
-  },
+  plugins: [preact(), wibble({ slug: "store", port: 5181, theme: "horror" })],
 });
