@@ -26,7 +26,9 @@ const scenes: { id: string; title: string; beats: Beat[] }[] = [
 const uses: Use[] = scenes.flatMap((s) => s.beats.flatMap((beat) => beat.cues.map((cue) => ({ scene: s.id, text: beat.text, beat, cue }))));
 const short = (t: string) => t.replace(/\n/g, " ").slice(0, 40);
 const where = (pick: (c: Cue) => string | null | undefined, id: string) =>
-  uses.filter((u) => pick(u.cue) === id).map((u) => `${u.scene} 「${short(u.text)}」`);
+  uses
+    .filter((u) => pick(u.cue) === id)
+    .map((u) => `${u.scene} 「${short(u.text)}」${"cut" in u.cue && (u.cue.hold ?? 1) > 1 ? ` (${u.cue.hold}줄)` : ""}`);
 
 const out: string[] = [];
 const unused: string[] = [];
@@ -53,6 +55,11 @@ out.push(
   "",
 );
 
+out.push(
+  "## 컷씬 그림 파일\n",
+  "`src/assets/cuts/`에 id 이름으로 넣으면 바로 붙는다. `<id>.gif`(한 장, 움직이는 그림 가능) 또는 `<id>.1.webp` + `<id>.2.webp`(두 장 → 넘김). 쓰이는 곳의 (N줄)은 컷씬이 떠 있는 대사 수.",
+  "",
+);
 section("컷씬", CUTS, (c) => ("cut" in c ? c.cut : null));
 
 out.push("## CCTV 모달\n", "| 칸 | 비추는 곳 |", "|---|---|");

@@ -13,9 +13,10 @@ import {
   type GameState,
   type PersonalityType,
 } from "./game/engine";
-import { CUTS, SHOTS, type Place, type ShotId } from "./game/media";
+import { CUTS, SHOTS, type CutId, type Place, type ShotId } from "./game/media";
 import { EXTRAS, NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
+import { Cutscene, preloadCuts } from "./view/Cutscene";
 import { PanoramaView } from "./view/PanoramaView";
 import { game } from "./wibble";
 
@@ -126,6 +127,16 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     for (const b of beats.slice(0, lineIdx + 1)) for (const c of b.cues) if ("cctv" in c) shot = c.cctv;
     return shot;
   }, [beats, lineIdx]);
+  // 컷씬: 지금 줄까지 마지막으로 나온 컷씬이 hold 줄 안이면 보인다. 장면이 바뀌면 닫힌다
+  const cut = useMemo(() => {
+    for (let i = Math.min(lineIdx, beats.length - 1); i >= 0; i--) {
+      for (const c of beats[i].cues) {
+        if ("cut" in c) return lineIdx < i + (c.hold ?? 1) ? { id: c.cut, at: i } : null;
+      }
+    }
+    return null;
+  }, [beats, lineIdx]);
+  useEffect(preloadCuts, []);
   const asking = done && !!node.question;
   // 대사창 버튼에 포커스 (Preact는 React와 달리 마운트 때 autoFocus를 대신 처리해 주지 않는다)
   const linesRef = useRef<HTMLButtonElement>(null);
@@ -170,6 +181,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
 
   return (
     <>
+      {cut && <Cutscene key={`${node.id}:${cut.at}`} id={cut.id} />}
       {cctv && <div className="cctv-dim" />}
       {cctv && (
         <div className="cctv-layer" style={{ bottom: `${panelH + 24}px` }}>
@@ -185,7 +197,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
         </span>
       </header>
 
-      {import.meta.env.DEV && <CueDebug beat={beats[lineIdx]} cctv={cctv} place={place} />}
+      {import.meta.env.DEV && <CueDebug beat={beats[lineIdx]} cctv={cctv} cut={cut?.id ?? null} place={place} />}
 
       <section ref={panelRef} className={`panel${asking ? " asking" : ""}`}>
         {!asking ? (
@@ -222,12 +234,13 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
  * 개발용: 지금 줄에 걸린 연출 큐를 글자로 보여 준다. 컷씬·CCTV 모달·소리가 실제로 붙기 전까지의 자리 표시.
  * 운영 빌드에는 나오지 않는다.
  */
-function CueDebug({ beat, cctv, place }: { beat?: Beat; cctv: ShotId | null; place: Place }) {
+function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null; cut: CutId | null; place: Place }) {
   const items: string[] = [];
   if (place === "outside") items.push("장소: 매장 밖 (실외 배경 없음)");
   if (cctv) items.push(`CCTV ${SHOTS[cctv].cam} ${SHOTS[cctv].mode} · ${cctv} — ${SHOTS[cctv].desc}`);
+  if (cut) items.push(`컷씬 ${cut} — ${CUTS[cut].desc}`);
   for (const c of beat?.cues ?? []) {
-    if ("cut" in c) items.push(`컷씬 ${c.cut} — ${CUTS[c.cut].desc}`);
+    if ("cut" in c) continue;
     else if ("fx" in c) items.push(`연출 ${c.fx}`);
     else if ("sfx" in c) items.push(`효과음 ${c.sfx}`);
     else if ("amb" in c) items.push(`환경음 ${c.amb}`);
