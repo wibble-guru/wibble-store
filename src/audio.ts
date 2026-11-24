@@ -24,7 +24,43 @@ export function audioContext(): AudioContext {
     if (ctx.state === "running") removeUnlock();
   });
   document.addEventListener("visibilitychange", () => void (document.hidden ? ctx.suspend() : ctx.resume()));
+  applyChannelMode(ctx);
+  // 이어폰을 꽂거나 빼면(출력 장치가 바뀌면) 채널 수를 다시 확인한다
+  navigator.mediaDevices?.addEventListener?.("devicechange", () => applyChannelMode(ctx));
   return ctx;
+}
+
+// ------------------------------------------------------------------ 모노 출력 자동 전환
+
+let mono = false;
+const channelListeners = new Set<() => void>();
+
+/**
+ * 출력 장치가 1채널(모노 스피커 등)이라고 알려 오면 모든 소리를 모노로 섞어 내보낸다.
+ * 좌우로 나뉜 소리가 한쪽에서 사라지지 않게 하기 위해서다.
+ * 브라우저는 이어폰 한쪽만 꽂혔는지는 알려 주지 않으므로, 장치가 알려 주는 채널 수만 본다.
+ */
+function applyChannelMode(ctx: AudioContext) {
+  const dest = ctx.destination;
+  const next = dest.maxChannelCount > 0 && dest.maxChannelCount < 2;
+  dest.channelInterpretation = "speakers";
+  dest.channelCount = next ? 1 : Math.min(2, dest.maxChannelCount || 2);
+  if (next === mono) return;
+  mono = next;
+  channelListeners.forEach((cb) => cb());
+}
+
+/** 지금 모노로 내보내는 중인지 */
+export const isMonoOutput = () => mono;
+
+/** 모노·스테레오가 바뀔 때 알려 준다 */
+export function onChannelModeChange(cb: () => void) {
+  channelListeners.add(cb);
+}
+
+/** 출력 장치가 바뀌었는지 다시 확인한다 (개발 확인용으로도 쓴다) */
+export function refreshChannelMode() {
+  if (shared) applyChannelMode(shared);
 }
 
 const buffers = new Map<string, Promise<AudioBuffer>>();

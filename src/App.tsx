@@ -19,6 +19,7 @@ import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
 import { PanoramaView } from "./view/PanoramaView";
 import { stopAllAudio } from "./audio";
+import { setListenerYaw, setSpatialCentered } from "./spatial";
 import { startBgm } from "./bgm";
 import { closeDoor, openDoor, preloadDoor, resetDoor } from "./door";
 import { playSfx, preloadSfx } from "./sfx";
@@ -55,7 +56,7 @@ export function App() {
 
   return (
     <main className="game">
-      <PanoramaView lookDeg={look} />
+      <PanoramaView lookDeg={look} onYaw={setListenerYaw} />
 
       {status === "connecting" && (
         <div className="overlay">
@@ -123,6 +124,11 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   const [clock, setClock] = useState("02:00");
   const [chapter, setChapter] = useState("");
   const [place, setPlace] = useState<Place>("inside");
+  // 매장 밖 장면에서는 매장 안 각도가 맞지 않으므로 좌우 위치 없이 가운데로
+  useEffect(() => {
+    setSpatialCentered(place === "outside");
+    return () => setSpatialCentered(false);
+  }, [place]);
 
   const node = NODES[game.node];
   const beats = useMemo(() => {
