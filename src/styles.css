@@ -501,6 +501,77 @@
   }
 }
 
+/* ---------------------------------------------------------------- 컷씬 (기능 확인용) */
+/* 매장 화면을 덮고, 시각·대사창은 위에 남는다. 그림은 화면을 꽉 채우도록 잘린다 */
+.cut {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  touch-action: none;
+  animation: fade-in 0.3s ease-out;
+}
+
+.cut-frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  /* 시간은 view/Cutscene.tsx의 FADE_MS와 같게 */
+  transition: opacity 0.6s ease;
+}
+
+.cut-frame:first-child,
+.cut-frame.on {
+  opacity: 1;
+}
+
+.cut-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+/* 그림이 아직 없을 때: 빈 화면 두 장 (2번은 조금 밝게 — 넘어가는 게 보이도록) */
+.cut-frame.empty {
+  display: grid;
+  place-items: center;
+  padding: 96px 24px 200px;
+  background: radial-gradient(ellipse at 50% 45%, var(--shade), var(--night) 75%);
+}
+
+.cut-frame.empty + .cut-frame.empty {
+  background: radial-gradient(ellipse at 50% 45%, #1d5254, var(--night) 75%);
+}
+
+.cut-placeholder {
+  display: grid;
+  gap: 6px;
+  max-width: 420px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.cut-id {
+  font: 700 12px/1.4 ui-monospace, monospace;
+  color: var(--glow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cut {
+    animation: none;
+  }
+  .cut-frame {
+    transition: none;
+  }
+}
+
 /* 개발용 큐 표시 (운영 빌드에는 없음) */
 .cue-debug {
   position: absolute;

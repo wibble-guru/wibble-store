@@ -66,14 +66,14 @@ pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·효과�
 
 ```ts
 { sfx: "snack-drop" }, "툭.",
-{ cut: "q1-pickup" }, "과자를 주워 제자리에 올려놓는다.",
+{ cut: "q1-pickup", hold: 4 }, "과자를 주워 제자리에 올려놓는다.",
 { cctv: "q2c-replay" }, { sfx: "cctv-rewind" }, "조금 전 영상으로 되돌린다.",
 { voice: "woman", via: "door" }, "\"밖에 아직 계세요?\"",
 ```
 
 | 큐 | 뜻 |
 |---|---|
-| `cut` | 1인칭 동작 컷씬 |
+| `cut` | 1인칭 동작 컷씬. 매장 화면을 덮고 `hold`줄(기본 1) 동안 보인다. 장면이 바뀌면 닫힌다 |
 | `cctv` | CCTV 모달을 열거나 화면을 바꾼다. `null`이면 닫는다. 장면이 바뀌면 자동으로 닫힌다 |
 | `fx` | 매장 화면 위에 얹는 연출 (터진 거품, 안내판, 발자국 …) |
 | `sfx` / `amb` | 효과음 / 덧씌우는 환경음. 기본 환경음은 장소(`place`)가 정한다 |
@@ -81,6 +81,11 @@ pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·효과�
 
 - 장면의 `place: "outside"`부터는 매장 밖이다(Q7-A, Q7-B, Q8-OUT, END-EXIT). **실외 배경은 아직 없다.**
 - CCTV 모달은 기능 확인용으로 붙어 있다(`src/view/CctvMonitor.tsx`): 4분할 모니터(CAM1 CAM2 / CAM5 CAM4)에서 장면의 카메라 칸을 강조하고 영상 상태를 표시한다. 칸 안 그림은 CCTV 영상이 생기기 전까지 파노라마를 잘라 쓴다.
+- 컷씬은 붙어 있다(`src/view/Cutscene.tsx`). 그림은 `src/assets/cuts/`에 id 이름으로 넣으면 코드 수정 없이 붙는다.
+  - `q1-pickup.gif` 한 장(.webp .png .jpg .avif도 됨, 움직이는 그림 가능) → 그대로 보여 준다
+  - `q1-pickup.1.webp` + `q1-pickup.2.webp` 두 장 → 1번을 1.4초 보여 준 뒤 0.6초 동안 2번으로 겹쳐 넘어간다(`SWAP_MS`·`FADE_MS`)
+  - 파일이 없으면 빈 화면 두 장으로 같은 넘김을 흉내 낸다. 개발 서버에서는 id·설명이 글자로 뜬다
+  - 그림은 화면을 꽉 채우도록 잘린다(모바일 세로 / PC 16:9). 중요한 동작은 가운데 세로 띠 안에 둔다
 - 나머지 큐는 자리만 잡혀 있다. 개발 서버에서만 화면 왼쪽 위에 현재 큐가 글자로 뜬다. 컷씬·휴대폰 화면과 CCTV 모달의 최종 디자인은 Figma에서 확정한 뒤 만들고, 그림·소리 파일이 생기면 `media.ts`의 `file`을 채운다.
 - 제작용 목록과 녹음 대본은 `pnpm cues`로 만드는 `docs/CUES.md`를 본다.
 
@@ -100,6 +105,7 @@ src/
   game/media.ts         연출 목록 (컷씬, CCTV 칸·장면, 화면 연출, 효과음, 환경음, 목소리 배역)
   view/PanoramaView.tsx 원근 보정 매장 화면
   view/CctvMonitor.tsx  CCTV 모달 (4분할 모니터)
+  view/Cutscene.tsx     컷씬 (한 장 / 두 장 넘김 / 빈 화면)
   view/projection.ts    투영 수식, 파노라마 규격, 시선 칸
   styles.css            팔레트(MOOD.md), 세로·가로 레이아웃
 scripts/coverage.ts     선택 조합 전수 검사

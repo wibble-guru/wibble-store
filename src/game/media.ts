@@ -16,6 +16,12 @@ type Sound = Entry & {
 
 // ------------------------------------------------------------------ 컷씬 (1인칭 손 동작)
 
+/**
+ * 그림은 file 칸 대신 src/assets/cuts/ 에 id 이름으로 넣으면 바로 붙는다 (view/Cutscene.tsx).
+ * - `q1-pickup.gif` (또는 .webp .png .jpg) 한 장: 그대로 보여 준다. 움직이는 GIF·WebP도 된다
+ * - `q1-pickup.1.webp` + `q1-pickup.2.webp` 두 장: 1번을 보여 주다가 2번으로 넘어간다
+ * - 파일이 없으면 빈 화면(자리 표시)
+ */
 export const CUTS = {
   "q1-pickup": { desc: "떨어진 과자봉지를 주워 선반에 올린다. 돌아서려는 순간 옆 봉지가 또 떨어진다" },
   "q1a-box": { desc: "과자 두 봉지를 계산대 아래 상품 보관함에 넣고 뚜껑을 닫는다" },
@@ -177,12 +183,13 @@ export type Via = keyof typeof VIA;
 
 /**
  * 대본 lines 안에서 대사 바로 앞에 둔다. 그 대사가 화면에 나올 때 실행된다.
+ * - cut: 매장 화면을 덮고 컷씬을 띄운다. hold = 이 대사부터 몇 줄 동안 보일지 (기본 1). 장면이 바뀌면 닫힌다
  * - cctv: 모달을 열거나 장면을 바꾼다. null 이면 닫는다. 장면(노드)이 바뀌면 자동으로 닫힌다
  * - amb: 장소 기본 환경음 위에 덧씌운다. 장면이 바뀌면 풀린다
  * - voice: 바로 다음 대사를 녹음한 목소리로 튼다. 파일 이름은 `장면id.순번`
  */
 export type Cue =
-  | { cut: CutId }
+  | { cut: CutId; hold?: number }
   | { cctv: ShotId | null }
   | { fx: FxId }
   | { sfx: SfxId }
