@@ -124,9 +124,15 @@ export const SFX = {
   // 라이브러리로 충분
   "counter-drop": { source: "library", desc: "계산대 쪽에서 물건이 떨어지는 소리", file: "drop2.wav", skip: 0.45 },
   "box-lid": { source: "library", desc: "보관함 뚜껑 여닫기" },
-  "box-shutter": { source: "library", desc: "잠긴 보관함 안에서 먹먹하게 들리는 카메라 '찰칵'" },
+  "box-shutter": {
+    source: "library",
+    desc: "잠긴 보관함 안에서 먹먹하게 들리는 카메라 '찰칵'",
+    // 먹먹하게, 작게 만든 파일이라 볼륨은 그대로
+    file: "box_shutter.wav",
+  },
   "phone-on": { source: "library", desc: "휴대폰 화면이 켜지는 소리", file: "mobile_phone.mp3" },
-  "phone-shutter": { source: "library", desc: "내 휴대폰 카메라 셔터" },
+  // 들릴 듯 말 듯 작게
+  "phone-shutter": { source: "library", desc: "내 휴대폰 카메라 셔터", file: "camera.mp3", volume: 0.25 },
   msg: { source: "library", desc: "메시지 알림" },
   "phone-vibe": { source: "library", desc: "휴대폰 진동 (전화 옴)" },
   scan: { source: "library", desc: "바코드 스캔·POS" },
