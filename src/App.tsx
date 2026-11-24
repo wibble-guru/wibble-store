@@ -165,16 +165,33 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   const entering = !!node.intro && introDone !== node.id;
   useEffect(() => {
     if (!node.intro) return;
-    node.intro.cues.forEach(runSound);
+    node.intro.cues.forEach((c) => runSound(c, onLook));
     const t = window.setTimeout(() => setIntroDone(node.id), node.intro.wait * 1000);
     return () => window.clearTimeout(t);
   }, [node]);
   // 대사 줄에 걸린 소리 큐. 줄이 바뀔 때만 튼다 (beats는 저장 변수가 바뀌어도 새로 만들어진다)
+  // { sfx, wait: true } 가 있으면 그 소리가 끝날 때까지 이 줄을 숨기고 진행을 멈춘다 (장면 앞 문 열림처럼)
+  const beatKey = `${node.id}:${lineIdx}`;
+  const [heard, setHeard] = useState<string | null>(null);
+  const listening = !entering && heard !== beatKey && !!beats[lineIdx]?.cues.some((c) => "sfx" in c && c.wait);
   useEffect(() => {
     if (entering) return;
-    beats[lineIdx]?.cues.forEach(runSound);
+    let alive = true;
+    const waits: Promise<void>[] = [];
+    for (const c of beats[lineIdx]?.cues ?? []) {
+      const played = runSound(c, onLook);
+      if (played && "sfx" in c && c.wait) waits.push(played);
+    }
+    if (waits.length) {
+      setHeard(null);
+      void Promise.all(waits).then(() => alive && setHeard(beatKey));
+    }
+    return () => {
+      alive = false;
+    };
   }, [node.id, lineIdx, entering]);
-  const asking = done && !entering && !!node.question;
+  const waiting = entering || listening;
+  const asking = done && !waiting && !!node.question;
   // 대사창 버튼에 포커스 (Preact는 React와 달리 마운트 때 autoFocus를 대신 처리해 주지 않는다)
   const linesRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -205,7 +222,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   }
 
   function advance() {
-    if (entering) return;
+    if (waiting) return;
     if (!done) return setLineIdx((i) => i + 1);
     if (node.question) return;
     goTo(enterNode(game, node), node.next ?? "RESULT");
@@ -215,7 +232,8 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     goTo(enterNode(applyChoice(game, node, choice), node), choice.next);
   }
 
-  const shown = entering ? [] : lines.slice(Math.max(0, lineIdx - 2), lineIdx + 1);
+  // 장면 앞 소리 중에는 비워 두고, 줄 소리를 기다리는 중에는 앞 줄들만 보여 준다
+  const shown = entering ? [] : listening ? lines.slice(Math.max(0, lineIdx - 3), lineIdx) : lines.slice(Math.max(0, lineIdx - 2), lineIdx + 1);
 
   return (
     <>
@@ -243,7 +261,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
             {shown.map((l, i) => (
               <Line key={`${node.id}-${lineIdx - shown.length + 1 + i}`} text={l} current={i === shown.length - 1} />
             ))}
-            {!entering && (
+            {!waiting && (
               <span className="more" aria-hidden="true">
                 ▼
               </span>
@@ -282,7 +300,8 @@ function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null
   for (const c of beat?.cues ?? []) {
     if ("cut" in c) continue;
     else if ("fx" in c) items.push(`연출 ${c.fx}`);
-    else if ("sfx" in c) items.push(`효과음 ${c.sfx}`);
+    else if ("sfx" in c)
+      items.push(`효과음 ${c.sfx}${c.walk ? ` (${c.walk[0]} → ${c.walk[1]} 걸음)` : ""}${c.wait ? " (끝날 때까지 대기)" : ""}`);
     else if ("amb" in c) items.push(`환경음 ${c.amb}`);
     else if ("voice" in c) items.push(`목소리 ${c.voice}${c.via ? `(${c.via})` : ""} · ${beat?.take}`);
     else if ("door" in c) items.push(`출입문 ${c.door} (문 소리 + 바깥 빗소리)`);
@@ -297,10 +316,16 @@ function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null
   );
 }
 
-/** 소리 큐 실행: 효과음, 출입문(문 소리 + 바깥 빗소리). 다른 큐는 화면 쪽에서 처리한다 */
-function runSound(c: Cue) {
-  if ("sfx" in c) playSfx(c.sfx);
-  else if ("door" in c) (c.door === "open" ? openDoor : closeDoor)();
+/**
+ * 소리 큐 실행: 효과음, 출입문(문 소리 + 바깥 빗소리). 다른 큐는 화면 쪽에서 처리한다.
+ * 걸어가는 효과음(walk)은 걸음마다 onLook으로 시선을 걷는 사람 쪽으로 돌린다
+ */
+function runSound(c: Cue, onLook: (deg: number) => void): Promise<void> | undefined {
+  if ("sfx" in c) {
+    const walk = c.walk && { from: SPOTS[c.walk[0]], to: SPOTS[c.walk[1]], onStep: onLook };
+    return playSfx(c.sfx, walk);
+  }
+  if ("door" in c) (c.door === "open" ? openDoor : closeDoor)();
 }
 
 /** "[점장님]\n..." 처럼 대괄호로 시작하는 줄은 메시지 카드로 */

@@ -7,6 +7,7 @@
  *
  * 컷씬·CCTV 모달·휴대폰 화면의 디자인은 Figma에서 확정한 뒤 만든다. 지금은 자리만 잡아 둔다.
  */
+import type { Spot } from "./engine";
 
 type Entry = { desc: string; file?: string };
 type Sound = Entry & {
@@ -21,6 +22,8 @@ type Sound = Entry & {
    * 시선을 돌리면 좌우가 따라 바뀐다. 없으면 전체에서 들린다(가운데)
    */
   side?: "left" | "right";
+  /** 발소리처럼 걸음이 나뉜 소리: 걸음마다 딛는 시각(초, 파일 기준). 큐의 walk로 걸음마다 위치를 옮길 때 쓴다 */
+  steps?: number[];
 };
 
 // ------------------------------------------------------------------ 컷씬 (1인칭 손 동작)
@@ -140,7 +143,13 @@ export const SFX = {
   flush: { source: "library", side: "right", desc: "물 내림 '쏴아아'", file: "toilet-flush.wav" },
   knock: { source: "library", side: "right", desc: "문 안쪽 노크 '똑. 똑. 똑.'", file: "knock.mp3" },
   "water-seep": { source: "library", side: "right", desc: "문 아래로 물 흐르는 소리" },
-  "steps-behind": { source: "library", side: "right", desc: "문 바로 뒤 발소리" },
+  "steps-behind": { source: "library", side: "right", desc: "문 바로 뒤 발소리", file: "footstep.wav" },
+  footstep: {
+    source: "library",
+    desc: "다가오는 발소리 6걸음",
+    file: "footstep.wav",
+    steps: [0.215, 1.135, 1.955, 2.885, 3.705, 4.64],
+  },
   drag: { source: "library", side: "right", desc: "문 안쪽에서 바닥 끄는 '스윽. 스윽.'" },
   "sensor-beep": { source: "library", side: "left", desc: "출입 센서 감지음" },
   // CCTV 모달: 열기·닫기 소리(cctv-on, cctv-off)는 모달이 알아서 낸다
@@ -203,12 +212,16 @@ export type Via = keyof typeof VIA;
  * - door: 출입문이 열리고 닫힌다. 문 소리와 문 너머 바깥 빗소리를 크로스페이드로 묶어 낸다 (src/door.ts).
  *   open 하면 빗소리가 장면이 바뀌어도 계속 이어지다가 close 때 잦아든다. close가 없으면 진행이 끝날 때까지.
  *   문 소리는 열 때만 낸다. 닫힐 때 문 소리가 필요하면 { sfx: "door-close" }를 따로 둔다
+ * - sfx에 wait: true를 주면 그 효과음이 끝날 때까지 대사를 숨기고 진행을 멈춘다 (장면 앞 문 열림처럼).
+ *   소리가 끝나면 대사가 나온다
+ * - sfx에 walk: [출발, 도착]을 주면 걸음(SFX의 steps)마다 소리 위치를 출발 → 도착으로 옮기고
+ *   시선도 걷는 사람을 따라 돌린다. 매장 안 장면에서만 쓴다
  */
 export type Cue =
   | { cut: CutId; hold?: number }
   | { cctv: ShotId | null }
   | { fx: FxId }
-  | { sfx: SfxId }
+  | { sfx: SfxId; wait?: boolean; walk?: [Spot, Spot] }
   | { amb: AmbId }
   | { voice: Role; via?: Via }
   | { door: "open" | "close" };
