@@ -105,7 +105,7 @@ export type FxId = keyof typeof FX;
 /** file 칸 = public/soundTrack/ 안의 파일 이름. 채워진 효과음만 실제로 난다 (src/sfx.ts) */
 export const SFX = {
   // 직접 녹음 권장: 반복해서 나오고 게임의 정체성이 되는 소리
-  bell: { source: "record", desc: "계산대 호출벨 '띵'" },
+  bell: { source: "record", desc: "계산대 호출벨 '띵'", file: "bell.mp3" },
   "bell-far": { source: "record", desc: "유리문 너머로 먹먹하게 들리는 호출벨" },
   "bell-phone": { source: "record", desc: "전화기 너머로 들리는 호출벨" },
   "door-chime": { source: "record", side: "left", desc: "자동문 차임 '띵동' (실제 체인점 차임과 겹치지 않게)" },
