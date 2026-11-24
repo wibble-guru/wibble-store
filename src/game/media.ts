@@ -103,6 +103,7 @@ export const SFX = {
   "door-open": { source: "record", desc: "자동문 열림 모터", file: "door-open.wav" },
   "door-open-dry": { source: "record", desc: "자동문 열림, 빗소리 없음. 마지막 손님 장처럼 바깥 빗소리가 따로 깔려 있을 때", file: "door-open(without-rain).wav" },
   "door-close": { source: "record", desc: "자동문 닫힘" },
+  "door-close-dry": { source: "record", desc: "자동문 닫힘, 빗소리 없음. 바깥 빗소리가 따로 깔려 있을 때 (닫히려다 다시 열리는 대목)", file: "door-close(without-rain).wav" },
   "wet-step": { source: "record", desc: "매장 타일 위 젖은 신발 '철벅'" },
   "wet-step-out": { source: "record", desc: "젖은 바깥 길 위 '철벅'" },
   "drag-wet": { source: "record", desc: "젖은 신발이 바닥을 끄는 소리" },
