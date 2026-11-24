@@ -13,12 +13,13 @@ import {
   type GameState,
   type PersonalityType,
 } from "./game/engine";
-import { CUTS, SHOTS, type CutId, type Place, type ShotId } from "./game/media";
+import { CUTS, SHOTS, type Cue, type CutId, type Place, type ShotId } from "./game/media";
 import { EXTRAS, NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
 import { PanoramaView } from "./view/PanoramaView";
 import { startBgm } from "./bgm";
+import { closeDoor, openDoor, preloadDoor, resetDoor } from "./door";
 import { playSfx, preloadSfx } from "./sfx";
 import { game } from "./wibble";
 
@@ -141,19 +142,24 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   }, [beats, lineIdx]);
   useEffect(preloadCuts, []);
   useEffect(preloadSfx, []);
-  // 장면 앞 효과음(intro): 소리를 틀고 wait초 동안 대사창을 비워 둔 뒤 첫 대사를 보여 준다
+  // 출입문 소리를 미리 받고, 진행이 끝나면(결과·다시 하기) 남은 바깥 빗소리를 끈다
+  useEffect(() => {
+    preloadDoor();
+    return resetDoor;
+  }, []);
+  // 장면 앞 소리(intro): 소리를 틀고 wait초 동안 대사창을 비워 둔 뒤 첫 대사를 보여 준다
   const [introDone, setIntroDone] = useState<string | null>(null);
   const entering = !!node.intro && introDone !== node.id;
   useEffect(() => {
     if (!node.intro) return;
-    playSfx(node.intro.sfx);
+    node.intro.cues.forEach(runSound);
     const t = window.setTimeout(() => setIntroDone(node.id), node.intro.wait * 1000);
     return () => window.clearTimeout(t);
   }, [node]);
-  // 대사 줄에 걸린 효과음 큐. 줄이 바뀔 때만 튼다 (beats는 저장 변수가 바뀌어도 새로 만들어진다)
+  // 대사 줄에 걸린 소리 큐. 줄이 바뀔 때만 튼다 (beats는 저장 변수가 바뀌어도 새로 만들어진다)
   useEffect(() => {
     if (entering) return;
-    for (const c of beats[lineIdx]?.cues ?? []) if ("sfx" in c) playSfx(c.sfx);
+    beats[lineIdx]?.cues.forEach(runSound);
   }, [node.id, lineIdx, entering]);
   const asking = done && !entering && !!node.question;
   // 대사창 버튼에 포커스 (Preact는 React와 달리 마운트 때 autoFocus를 대신 처리해 주지 않는다)
@@ -266,6 +272,7 @@ function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null
     else if ("sfx" in c) items.push(`효과음 ${c.sfx}`);
     else if ("amb" in c) items.push(`환경음 ${c.amb}`);
     else if ("voice" in c) items.push(`목소리 ${c.voice}${c.via ? `(${c.via})` : ""} · ${beat?.take}`);
+    else if ("door" in c) items.push(`출입문 ${c.door} (문 소리 + 바깥 빗소리)`);
   }
   if (!items.length) return null;
   return (
@@ -275,6 +282,12 @@ function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null
       ))}
     </ul>
   );
+}
+
+/** 소리 큐 실행: 효과음, 출입문(문 소리 + 바깥 빗소리). 다른 큐는 화면 쪽에서 처리한다 */
+function runSound(c: Cue) {
+  if ("sfx" in c) playSfx(c.sfx);
+  else if ("door" in c) (c.door === "open" ? openDoor : closeDoor)();
 }
 
 /** "[점장님]\n..." 처럼 대괄호로 시작하는 줄은 메시지 카드로 */

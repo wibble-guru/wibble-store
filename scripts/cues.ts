@@ -28,7 +28,7 @@ const uses: Use[] = [
   ...Object.values(NODES).flatMap((n) => {
     if (!n.intro) return [];
     const text = `(장면 시작 전, ${n.intro.wait}초 뒤 첫 대사)`;
-    return [{ scene: n.id, text, beat: { text, cues: [] }, cue: { sfx: n.intro.sfx } }];
+    return n.intro.cues.map((cue) => ({ scene: n.id, text, beat: { text, cues: [] }, cue }));
   }),
   ...scenes.flatMap((s) => s.beats.flatMap((beat) => beat.cues.map((cue) => ({ scene: s.id, text: beat.text, beat, cue })))),
 ];
@@ -76,6 +76,16 @@ out.push("");
 section("CCTV 장면", SHOTS, (c) => ("cctv" in c ? c.cctv : null), (id) => ` · **${SHOTS[id].cam} ${SHOTS[id].mode}**`);
 section("매장 화면 위 연출", FX, (c) => ("fx" in c ? c.fx : null));
 section("효과음", SFX, (c) => ("sfx" in c ? c.sfx : null));
+
+out.push(
+  "## 출입문 (문 소리 + 바깥 빗소리)\n",
+  "`src/door.ts`. 열 때 door-open(without-rain) + rain-start(outside) → rain(outside) 반복, 닫을 때 rain-end(outside) (문 닫히는 소리는 효과음 door-close로 따로). 사이는 모두 크로스페이드. 열려 있는 동안은 장면이 바뀌어도 빗소리가 이어지고, close가 없으면 진행이 끝날 때 잦아든다.",
+  "",
+  "| 큐 | 쓰이는 곳 |",
+  "|---|---|",
+);
+for (const d of ["open", "close"]) out.push(`| \`door: ${d}\` | ${where((c) => ("door" in c ? c.door : null), d).join("<br>") || "—"} |`);
+out.push("");
 section("환경음", AMB, (c) => ("amb" in c ? c.amb : null), (id) => {
   const places = Object.entries(PLACE_AMB).filter(([, ids]) => ids.includes(id)).map(([p]) => (p === "inside" ? "매장 안" : "매장 밖"));
   return places.length ? ` · 기본: ${places.join(", ")}` : "";

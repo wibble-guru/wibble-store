@@ -136,7 +136,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
       title: "계산대 아래",
       time: "02:29",
       look: "counter",
-      intro: { sfx: "door-open", wait: 2.5 },
+      intro: { cues: [{ sfx: "door-open" }], wait: 2.5 },
       lines: [
         "손님 한 명이 삼각김밥과 음료수를 계산대에 올려놓는다.",
         { sfx: "scan" }, "바코드를 찍으려는 순간 손님이 갑자기 한 발짝 물러난다.",
@@ -665,7 +665,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
       title: "마지막 손님",
       time: "05:48",
       look: "door",
-      intro: { sfx: "door-open", wait: 2.5 },
+      intro: { cues: [{ door: "open" }], wait: 2.5 },
       lines: [
         { sfx: "scan" }, "손님 한 명이 생수를 계산한다.",
         "특별한 점은 없다.",
@@ -812,7 +812,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
       lines: [
         { cctv: "q8b-save" }, { sfx: "cctv-save" }, "CCTV 화면을 저장한다.",
         { cctv: null }, "출입문을 향해 걸어간다.",
-        { sfx: "door-open" }, "자동문이 열린다.",
+        { sfx: "door-open-dry" }, "자동문이 열린다.",
         { cut: "exit-door", hold: 2 }, "당신이 문을 통과하는 순간,",
         { sfx: "drag-wet" }, "등 뒤에서 젖은 신발이 바닥을 끄는 소리가 들린다.",
       ],
@@ -898,7 +898,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
       lines: [
         "편의점에서 조금 떨어진다.",
         "점장에게 현재 상황을 메시지로 남긴다.",
-        { sfx: "door-close" }, "뒤에서 자동문이 닫히는 소리가 들린다.",
+        { sfx: "door-close" }, { door: "close" }, "뒤에서 자동문이 닫히는 소리가 들린다.",
         "잠시 후 발소리가 들린다.",
         { sfx: "wet-step-out" }, "철벅.",
         "당신이 멈추자 발소리도 멈춘다.",
@@ -924,7 +924,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
       title: "출입문 확인",
       lines: [
         "매장 밖에서 자동문을 지켜본다.",
-        { sfx: "door-open" }, { fx: "door-stuck" }, "문이 닫히려다 다시 열린다.",
+        { sfx: "door-open-dry" }, { fx: "door-stuck" }, "문이 닫히려다 다시 열린다.",
         "출입 센서에는 여전히 사람이 한 명 감지되고 있다.",
         "당신은 점장에게 다시 연락한다.",
         "그 순간 매장 안쪽에서 호출벨이 울린다.",
@@ -984,7 +984,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
       title: "함께 나온 사람",
       place: "outside",
       lines: [
-        { sfx: "door-close" }, "자동문이 닫힌다.",
+        { sfx: "door-close" }, { door: "close" }, "자동문이 닫힌다.",
         "당신은 무사히 편의점을 빠져나왔다.",
         { sfx: "msg" }, "그때 휴대폰에 알림이 도착한다.",
         "[출입 센서 기록]\n퇴장 인원 : 2명",

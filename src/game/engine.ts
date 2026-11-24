@@ -6,7 +6,7 @@
  * - 스토리 엔딩과 성향 유형은 서로 따로 계산한다 (기획서 9절).
  */
 
-import type { Cue, Place, SfxId } from "./media";
+import type { Cue, Place } from "./media";
 
 export type Trait = "P" | "T" | "A" | "S";
 export const TRAITS: Trait[] = ["P", "T", "A", "S"];
@@ -66,10 +66,10 @@ export type SceneNode = {
   /** 이 장면부터 장소가 바뀌면. 다음 장면들도 이어서 그 장소 (배경·환경음) */
   place?: Place;
   /**
-   * 첫 대사가 나오기 전에 틀 효과음. wait초 동안 대사창을 비워 두고 소리만 들려준 뒤 대사를 시작한다
+   * 첫 대사가 나오기 전에 실행할 소리 큐. wait초 동안 대사창을 비워 두고 소리만 들려준 뒤 대사를 시작한다
    * (소리는 끝까지 이어서 난다). 예: 손님이 들어오는 장면 앞의 자동문 소리
    */
-  intro?: { sfx: SfxId; wait: number };
+  intro?: { cues: Extract<Cue, { sfx: unknown } | { door: unknown }>[]; wait: number };
   lines: Line[];
   /** 장면이 끝난 뒤 저장할 상태 */
   set?: Vars;
