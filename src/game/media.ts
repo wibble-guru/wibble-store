@@ -93,13 +93,14 @@ export type FxId = keyof typeof FX;
 
 // ------------------------------------------------------------------ 효과음
 
+/** file 칸 = public/soundTrack/ 안의 파일 이름. 채워진 효과음만 실제로 난다 (src/sfx.ts) */
 export const SFX = {
   // 직접 녹음 권장: 반복해서 나오고 게임의 정체성이 되는 소리
   bell: { source: "record", desc: "계산대 호출벨 '띵'" },
   "bell-far": { source: "record", desc: "유리문 너머로 먹먹하게 들리는 호출벨" },
   "bell-phone": { source: "record", desc: "전화기 너머로 들리는 호출벨" },
   "door-chime": { source: "record", desc: "자동문 차임 '띵동' (실제 체인점 차임과 겹치지 않게)" },
-  "door-open": { source: "record", desc: "자동문 열림 모터" },
+  "door-open": { source: "record", desc: "자동문 열림 모터", file: "door-open.wav" },
   "door-close": { source: "record", desc: "자동문 닫힘" },
   "wet-step": { source: "record", desc: "매장 타일 위 젖은 신발 '철벅'" },
   "wet-step-out": { source: "record", desc: "젖은 바깥 길 위 '철벅'" },

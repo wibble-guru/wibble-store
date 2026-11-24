@@ -136,6 +136,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
       title: "계산대 아래",
       time: "02:29",
       look: "counter",
+      intro: { sfx: "door-open", wait: 2.5 },
       lines: [
         "손님 한 명이 삼각김밥과 음료수를 계산대에 올려놓는다.",
         { sfx: "scan" }, "바코드를 찍으려는 순간 손님이 갑자기 한 발짝 물러난다.",
@@ -654,7 +655,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
         "하지만 계산대 아래에 넣어둔 근무 수칙이 계속 신경 쓰인다.",
         "'마지막 손님이 퇴장했는지 확인한 후 근무를 종료하십시오.'",
         "왜 굳이 이런 항목이 추가된 걸까?",
-        { sfx: "door-chime" }, "그때 자동문이 열린다.",
+        "그때 자동문이 열린다.",
       ],
       next: "Q7",
     }),
@@ -664,6 +665,7 @@ export const NODES: Record<string, SceneNode> = Object.fromEntries(
       title: "마지막 손님",
       time: "05:48",
       look: "door",
+      intro: { sfx: "door-open", wait: 2.5 },
       lines: [
         { sfx: "scan" }, "손님 한 명이 생수를 계산한다.",
         "특별한 점은 없다.",

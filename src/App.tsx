@@ -19,6 +19,7 @@ import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
 import { PanoramaView } from "./view/PanoramaView";
 import { startBgm } from "./bgm";
+import { playSfx, preloadSfx } from "./sfx";
 import { game } from "./wibble";
 
 type Phase =
@@ -139,7 +140,22 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     return null;
   }, [beats, lineIdx]);
   useEffect(preloadCuts, []);
-  const asking = done && !!node.question;
+  useEffect(preloadSfx, []);
+  // 장면 앞 효과음(intro): 소리를 틀고 wait초 동안 대사창을 비워 둔 뒤 첫 대사를 보여 준다
+  const [introDone, setIntroDone] = useState<string | null>(null);
+  const entering = !!node.intro && introDone !== node.id;
+  useEffect(() => {
+    if (!node.intro) return;
+    playSfx(node.intro.sfx);
+    const t = window.setTimeout(() => setIntroDone(node.id), node.intro.wait * 1000);
+    return () => window.clearTimeout(t);
+  }, [node]);
+  // 대사 줄에 걸린 효과음 큐. 줄이 바뀔 때만 튼다 (beats는 저장 변수가 바뀌어도 새로 만들어진다)
+  useEffect(() => {
+    if (entering) return;
+    for (const c of beats[lineIdx]?.cues ?? []) if ("sfx" in c) playSfx(c.sfx);
+  }, [node.id, lineIdx, entering]);
+  const asking = done && !entering && !!node.question;
   // 대사창 버튼에 포커스 (Preact는 React와 달리 마운트 때 autoFocus를 대신 처리해 주지 않는다)
   const linesRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -170,6 +186,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   }
 
   function advance() {
+    if (entering) return;
     if (!done) return setLineIdx((i) => i + 1);
     if (node.question) return;
     goTo(enterNode(game, node), node.next ?? "RESULT");
@@ -179,7 +196,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     goTo(enterNode(applyChoice(game, node, choice), node), choice.next);
   }
 
-  const shown = lines.slice(Math.max(0, lineIdx - 2), lineIdx + 1);
+  const shown = entering ? [] : lines.slice(Math.max(0, lineIdx - 2), lineIdx + 1);
 
   return (
     <>
@@ -199,7 +216,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
         </span>
       </header>
 
-      {import.meta.env.DEV && <CueDebug beat={beats[lineIdx]} cctv={cctv} cut={cut?.id ?? null} place={place} />}
+      {import.meta.env.DEV && <CueDebug beat={entering ? undefined : beats[lineIdx]} cctv={cctv} cut={cut?.id ?? null} place={place} />}
 
       <section ref={panelRef} className={`panel${asking ? " asking" : ""}`}>
         {!asking ? (
@@ -207,9 +224,11 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
             {shown.map((l, i) => (
               <Line key={`${node.id}-${lineIdx - shown.length + 1 + i}`} text={l} current={i === shown.length - 1} />
             ))}
-            <span className="more" aria-hidden="true">
-              ▼
-            </span>
+            {!entering && (
+              <span className="more" aria-hidden="true">
+                ▼
+              </span>
+            )}
           </button>
         ) : (
           <div className="question">

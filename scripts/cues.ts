@@ -23,7 +23,15 @@ const scenes: { id: string; title: string; beats: Beat[] }[] = [
   })),
 ];
 
-const uses: Use[] = scenes.flatMap((s) => s.beats.flatMap((beat) => beat.cues.map((cue) => ({ scene: s.id, text: beat.text, beat, cue }))));
+const uses: Use[] = [
+  // 장면 앞 효과음(intro): 첫 대사 전에 나는 소리
+  ...Object.values(NODES).flatMap((n) => {
+    if (!n.intro) return [];
+    const text = `(장면 시작 전, ${n.intro.wait}초 뒤 첫 대사)`;
+    return [{ scene: n.id, text, beat: { text, cues: [] }, cue: { sfx: n.intro.sfx } }];
+  }),
+  ...scenes.flatMap((s) => s.beats.flatMap((beat) => beat.cues.map((cue) => ({ scene: s.id, text: beat.text, beat, cue })))),
+];
 const short = (t: string) => t.replace(/\n/g, " ").slice(0, 40);
 const where = (pick: (c: Cue) => string | null | undefined, id: string) =>
   uses
