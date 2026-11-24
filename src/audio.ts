@@ -109,25 +109,30 @@ export function unmuteAudio() {
 
 // ------------------------------------------------------------------ 재생
 
-/** start초에 한 번 튼다. fadeIn·fadeOut초만큼 앞뒤에 페이드를 건다 */
+/**
+ * start초에 한 번 튼다. fadeIn·fadeOut초만큼 앞뒤에 페이드를 건다.
+ * offset초를 주면 파일 앞부분을 그만큼 건너뛰고 튼다 (페이드도 남은 길이 기준).
+ */
 export function playBuffer(
   buffer: AudioBuffer,
   out: AudioNode,
   start: number,
   fade: { in?: number; out?: number } = {},
+  offset = 0,
 ): AudioBufferSourceNode {
   const ctx = audioContext();
   const src = ctx.createBufferSource();
   src.buffer = buffer;
+  const length = buffer.duration - offset;
   const env = ctx.createGain();
   if (fade.in) env.gain.setValueCurveAtTime(FADE_IN, start, fade.in);
-  if (fade.out) env.gain.setValueCurveAtTime(FADE_OUT, start + buffer.duration - fade.out, fade.out);
+  if (fade.out) env.gain.setValueCurveAtTime(FADE_OUT, start + length - fade.out, fade.out);
   src.connect(env).connect(out);
   src.onended = () => {
     active.delete(src);
     env.disconnect();
   };
-  src.start(start);
+  src.start(start, offset);
   active.add(src);
   return src;
 }

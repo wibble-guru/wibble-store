@@ -12,6 +12,10 @@ type Entry = { desc: string; file?: string };
 type Sound = Entry & {
   /** record = 직접 녹음 권장, library = 효과음 라이브러리로 충분 */
   source: "record" | "library";
+  /** 볼륨 배율 (기본 1). 파일이 작게 녹음됐을 때 */
+  volume?: number;
+  /** 파일 앞에서 건너뛸 길이(초). 본 소리 앞에 잡음·여백이 있어 대사보다 늦게 들릴 때 */
+  skip?: number;
 };
 
 // ------------------------------------------------------------------ 컷씬 (1인칭 손 동작)
@@ -107,7 +111,7 @@ export const SFX = {
   "wet-step": { source: "record", desc: "매장 타일 위 젖은 신발 '철벅'" },
   "wet-step-out": { source: "record", desc: "젖은 바깥 길 위 '철벅'" },
   "drag-wet": { source: "record", desc: "젖은 신발이 바닥을 끄는 소리" },
-  "snack-drop": { source: "record", desc: "과자봉지가 바닥에 떨어지는 '툭'" },
+  "snack-drop": { source: "record", desc: "과자봉지가 바닥에 떨어지는 '툭'", file: "drop.wav", skip: 0.18 },
   "snack-rustle": { source: "record", desc: "과자봉지 구겨지는 '바스락'" },
   // 라이브러리로 충분
   "counter-drop": { source: "library", desc: "계산대 쪽에서 물건이 떨어지는 소리" },

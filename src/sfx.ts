@@ -7,10 +7,13 @@ import { audioContext, loadBuffer, output, playBuffer, soundEpoch } from "./audi
 import { SFX, type SfxId } from "./game/media";
 
 const VOLUME = 1;
+/** skip으로 앞을 잘라 낸 자리의 페이드인(초). 잘린 지점에서 '틱' 소리가 나지 않게 */
+const SKIP_FADE_IN = 0.005;
+/** 모든 효과음 끝의 페이드아웃(초). 꼬리가 툭 끊기지 않게 */
+const END_FADE_OUT = 0.03;
 
-function fileOf(id: SfxId): string | undefined {
-  return (SFX[id] as { file?: string }).file;
-}
+type SfxEntry = { file?: string; volume?: number; skip?: number };
+const entry = (id: SfxId) => SFX[id] as SfxEntry;
 
 let bus: GainNode | null = null;
 function sfxOut(): GainNode {
@@ -25,20 +28,31 @@ function sfxOut(): GainNode {
 /** 파일이 있는 효과음을 미리 받아 둔다 (첫 재생이 늦지 않게) */
 export function preloadSfx() {
   for (const id of Object.keys(SFX) as SfxId[]) {
-    const file = fileOf(id);
+    const { file } = entry(id);
     if (file) loadBuffer(file).catch((err) => console.warn(`[sfx] ${file}을(를) 불러오지 못했습니다`, err));
   }
 }
 
 /** 효과음을 한 번 튼다. 같은 소리가 겹쳐도 된다 */
 export function playSfx(id: SfxId) {
-  const file = fileOf(id);
+  const { file, volume = 1, skip = 0 } = entry(id);
   if (!file) return;
   const epoch = soundEpoch();
   loadBuffer(file)
     .then((buffer) => {
       // 받는 사이에 소리가 정리됐으면(결과 전송) 틀지 않는다
-      if (epoch === soundEpoch()) playBuffer(buffer, sfxOut(), audioContext().currentTime);
+      if (epoch !== soundEpoch()) return;
+      const ctx = audioContext();
+      const gain = ctx.createGain();
+      gain.gain.value = volume;
+      gain.connect(sfxOut());
+      const length = buffer.duration - skip;
+      const fade = {
+        in: skip > 0 ? Math.min(SKIP_FADE_IN, length / 4) : undefined,
+        out: Math.min(END_FADE_OUT, length / 4),
+      };
+      const src = playBuffer(buffer, gain, ctx.currentTime, fade, skip);
+      src.addEventListener("ended", () => gain.disconnect());
     })
     .catch((err) => console.warn(`[sfx] ${id}을(를) 틀지 못했습니다`, err));
 }
