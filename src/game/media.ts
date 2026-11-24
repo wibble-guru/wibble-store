@@ -93,13 +93,15 @@ export type FxId = keyof typeof FX;
 
 // ------------------------------------------------------------------ 효과음
 
+/** file 칸 = public/soundTrack/ 안의 파일 이름. 채워진 효과음만 실제로 난다 (src/sfx.ts) */
 export const SFX = {
   // 직접 녹음 권장: 반복해서 나오고 게임의 정체성이 되는 소리
   bell: { source: "record", desc: "계산대 호출벨 '띵'" },
   "bell-far": { source: "record", desc: "유리문 너머로 먹먹하게 들리는 호출벨" },
   "bell-phone": { source: "record", desc: "전화기 너머로 들리는 호출벨" },
   "door-chime": { source: "record", desc: "자동문 차임 '띵동' (실제 체인점 차임과 겹치지 않게)" },
-  "door-open": { source: "record", desc: "자동문 열림 모터" },
+  "door-open": { source: "record", desc: "자동문 열림 모터", file: "door-open.wav" },
+  "door-open-dry": { source: "record", desc: "자동문 열림, 빗소리 없음. 마지막 손님 장처럼 바깥 빗소리가 따로 깔려 있을 때", file: "door-open(without-rain).wav" },
   "door-close": { source: "record", desc: "자동문 닫힘" },
   "wet-step": { source: "record", desc: "매장 타일 위 젖은 신발 '철벅'" },
   "wet-step-out": { source: "record", desc: "젖은 바깥 길 위 '철벅'" },
@@ -187,6 +189,9 @@ export type Via = keyof typeof VIA;
  * - cctv: 모달을 열거나 장면을 바꾼다. null 이면 닫는다. 장면(노드)이 바뀌면 자동으로 닫힌다
  * - amb: 장소 기본 환경음 위에 덧씌운다. 장면이 바뀌면 풀린다
  * - voice: 바로 다음 대사를 녹음한 목소리로 튼다. 파일 이름은 `장면id.순번`
+ * - door: 출입문이 열리고 닫힌다. 문 소리와 문 너머 바깥 빗소리를 크로스페이드로 묶어 낸다 (src/door.ts).
+ *   open 하면 빗소리가 장면이 바뀌어도 계속 이어지다가 close 때 잦아든다. close가 없으면 진행이 끝날 때까지.
+ *   문 소리는 열 때만 낸다. 닫힐 때 문 소리가 필요하면 { sfx: "door-close" }를 따로 둔다
  */
 export type Cue =
   | { cut: CutId; hold?: number }
@@ -194,4 +199,5 @@ export type Cue =
   | { fx: FxId }
   | { sfx: SfxId }
   | { amb: AmbId }
-  | { voice: Role; via?: Via };
+  | { voice: Role; via?: Via }
+  | { door: "open" | "close" };
