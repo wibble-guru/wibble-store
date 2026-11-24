@@ -18,6 +18,7 @@ import { EXTRAS, NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
 import { PanoramaView } from "./view/PanoramaView";
+import { stopAllAudio } from "./audio";
 import { startBgm } from "./bgm";
 import { closeDoor, openDoor, preloadDoor, resetDoor } from "./door";
 import { playSfx, preloadSfx } from "./sfx";
@@ -37,11 +38,17 @@ export function App() {
   const { status, host } = useWibbleHost(game);
   const [phase, setPhase] = useState<Phase>({ kind: "title" });
   const [look, setLook] = useState<number>(SPOTS.counter);
-  useEffect(() => startBgm(), []);
+  // 배경음은 결과 전까지만. 다시 하기로 타이틀에 돌아오면 다시 켠다
+  const over = phase.kind === "result";
+  useEffect(() => (over ? undefined : startBgm()), [over]);
 
   function finish(state: GameState) {
     const type = decideType(state.scores, state.picks, TYPES);
-    setPhase({ kind: "result", type, state, sent: game.sendResult(type.id) });
+    const sent = game.sendResult(type.id);
+    // 결과를 보내는 순간 배경음·효과음·출입문 빗소리를 모두 정리한다
+    resetDoor();
+    stopAllAudio();
+    setPhase({ kind: "result", type, state, sent });
   }
 
   if (status === "blocked") return <WibbleGate game={game} />;
