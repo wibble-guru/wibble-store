@@ -18,6 +18,7 @@ import { EXTRAS, NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
 import { PanoramaView } from "./view/PanoramaView";
+import { startBgm } from "./bgm";
 import { game } from "./wibble";
 
 type Phase =
@@ -34,6 +35,7 @@ export function App() {
   const { status, host } = useWibbleHost(game);
   const [phase, setPhase] = useState<Phase>({ kind: "title" });
   const [look, setLook] = useState<number>(SPOTS.counter);
+  useEffect(() => startBgm(), []);
 
   function finish(state: GameState) {
     const type = decideType(state.scores, state.picks, TYPES);
