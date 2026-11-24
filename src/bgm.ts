@@ -14,7 +14,7 @@ type Track = {
 
 const TRACKS: Track[] = [
   { file: "idle.wav", volume: 1, crossfade: 1.5 },
-  { file: "rain.wav", volume: 0.3, crossfade: 1.5 },
+  { file: "rain.wav", volume: 0.5, crossfade: 1.5 },
 ];
 
 /** 끌 때 페이드아웃 길이(초) */
