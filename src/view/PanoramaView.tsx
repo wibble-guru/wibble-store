@@ -8,6 +8,8 @@ type Props = {
   lookDeg: number;
   /** 파니니 정도. 0 = 일반 원근(기본) */
   panini?: number;
+  /** 지금 보고 있는 방향(도)이 바뀔 때마다. 드래그·버튼·장면 전환 애니메이션 모두 */
+  onYaw?: (deg: number) => void;
 };
 
 type GL = {
@@ -20,12 +22,14 @@ const DEG = Math.PI / 180;
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /** 계산대 뒤에서 본 매장. 원통형 파노라마를 원근 보정해서 그린다 */
-export function PanoramaView({ lookDeg, panini = 0 }: Props) {
+export function PanoramaView({ lookDeg, panini = 0, onYaw }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glRef = useRef<GL | null>(null);
   const yawRef = useRef(lookDeg * DEG);
   const animRef = useRef(0);
   const dragRef = useRef<{ x: number; yaw: number } | null>(null);
+  const onYawRef = useRef(onYaw);
+  onYawRef.current = onYaw;
   const [edges, setEdges] = useState({ start: false, end: false });
   const [fallback, setFallback] = useState(false);
 
@@ -67,6 +71,7 @@ export function PanoramaView({ lookDeg, panini = 0 }: Props) {
     gl.uniform1f(u.f, f);
     gl.uniform1f(u.cy, cy);
     gl.uniform1f(u.yaw, yawRef.current);
+    onYawRef.current?.(yawRef.current / DEG);
     gl.uniform1f(u.d, panini);
     gl.uniform4f(u.pano, PANO.uMin, PANO.uMax, PANO.vTop, PANO.vBot);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

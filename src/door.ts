@@ -14,7 +14,8 @@
  * 문이 열려 있는 동안(open ~ close) 빗소리는 장면이 바뀌어도 계속 반복된다.
  * close가 없으면 장면 진행이 끝날 때(결과 화면)까지 이어지다가 잦아든다.
  */
-import { FADE_OUT, audioContext, crossfadeLoop, loadBuffer, output, playBuffer, soundEpoch } from "./audio";
+import { FADE_OUT, audioContext, crossfadeLoop, loadBuffer, playBuffer, soundEpoch } from "./audio";
+import { busFor } from "./spatial";
 
 const FILES = {
   open: "door-open(without-rain).wav",
@@ -60,7 +61,8 @@ function gain(value: number): GainNode {
   const ctx = audioContext();
   const g = ctx.createGain();
   g.gain.value = value;
-  g.connect(output());
+  // 문 소리와 문 너머 빗소리는 출입문 쪽(왼쪽)에 고정
+  g.connect(busFor("left"));
   return g;
 }
 

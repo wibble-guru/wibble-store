@@ -16,6 +16,11 @@ type Sound = Entry & {
   volume?: number;
   /** 파일 앞에서 건너뛸 길이(초). 본 소리 앞에 잡음·여백이 있어 대사보다 늦게 들릴 때 */
   skip?: number;
+  /**
+   * 소리가 나는 쪽 (src/spatial.ts). left = 출입문·창문 쪽, right = 화장실·CCTV 쪽에 고정돼
+   * 시선을 돌리면 좌우가 따라 바뀐다. 없으면 전체에서 들린다(가운데)
+   */
+  side?: "left" | "right";
 };
 
 // ------------------------------------------------------------------ 컷씬 (1인칭 손 동작)
@@ -103,11 +108,11 @@ export const SFX = {
   bell: { source: "record", desc: "계산대 호출벨 '띵'" },
   "bell-far": { source: "record", desc: "유리문 너머로 먹먹하게 들리는 호출벨" },
   "bell-phone": { source: "record", desc: "전화기 너머로 들리는 호출벨" },
-  "door-chime": { source: "record", desc: "자동문 차임 '띵동' (실제 체인점 차임과 겹치지 않게)" },
-  "door-open": { source: "record", desc: "자동문 열림 모터", file: "door-open.wav" },
-  "door-open-dry": { source: "record", desc: "자동문 열림, 빗소리 없음. 마지막 손님 장처럼 바깥 빗소리가 따로 깔려 있을 때", file: "door-open(without-rain).wav" },
-  "door-close": { source: "record", desc: "자동문 닫힘" },
-  "door-close-dry": { source: "record", desc: "자동문 닫힘, 빗소리 없음. 바깥 빗소리가 따로 깔려 있을 때 (닫히려다 다시 열리는 대목)", file: "door-close(without-rain).wav" },
+  "door-chime": { source: "record", side: "left", desc: "자동문 차임 '띵동' (실제 체인점 차임과 겹치지 않게)" },
+  "door-open": { source: "record", side: "left", desc: "자동문 열림 모터", file: "door-open.wav" },
+  "door-open-dry": { source: "record", side: "left", desc: "자동문 열림, 빗소리 없음. 마지막 손님 장처럼 바깥 빗소리가 따로 깔려 있을 때", file: "door-open(without-rain).wav" },
+  "door-close": { source: "record", side: "left", desc: "자동문 닫힘" },
+  "door-close-dry": { source: "record", side: "left", desc: "자동문 닫힘, 빗소리 없음. 바깥 빗소리가 따로 깔려 있을 때 (닫히려다 다시 열리는 대목)", file: "door-close(without-rain).wav" },
   "wet-step": { source: "record", desc: "매장 타일 위 젖은 신발 '철벅'" },
   "wet-step-out": { source: "record", desc: "젖은 바깥 길 위 '철벅'" },
   "drag-wet": { source: "record", desc: "젖은 신발이 바닥을 끄는 소리" },
@@ -132,12 +137,12 @@ export const SFX = {
   "finger-squeak": { source: "library", desc: "젖은 유리 위 손가락 미끄러지는 소리" },
   "sign-set": { source: "library", desc: "안내판 세우기" },
   "sign-drag": { source: "library", desc: "안내판이 끌리는 소리" },
-  flush: { source: "library", desc: "물 내림 '쏴아아'" },
-  knock: { source: "library", desc: "문 안쪽 노크 '똑. 똑. 똑.'" },
-  "water-seep": { source: "library", desc: "문 아래로 물 흐르는 소리" },
-  "steps-behind": { source: "library", desc: "문 바로 뒤 발소리" },
-  drag: { source: "library", desc: "문 안쪽에서 바닥 끄는 '스윽. 스윽.'" },
-  "sensor-beep": { source: "library", desc: "출입 센서 감지음" },
+  flush: { source: "library", side: "right", desc: "물 내림 '쏴아아'", file: "toilet-flush.wav" },
+  knock: { source: "library", side: "right", desc: "문 안쪽 노크 '똑. 똑. 똑.'", file: "knock.mp3" },
+  "water-seep": { source: "library", side: "right", desc: "문 아래로 물 흐르는 소리" },
+  "steps-behind": { source: "library", side: "right", desc: "문 바로 뒤 발소리" },
+  drag: { source: "library", side: "right", desc: "문 안쪽에서 바닥 끄는 '스윽. 스윽.'" },
+  "sensor-beep": { source: "library", side: "left", desc: "출입 센서 감지음" },
   // CCTV 모달: 열기·닫기 소리(cctv-on, cctv-off)는 모달이 알아서 낸다
   "cctv-on": { source: "library", desc: "CCTV 모니터 켜짐 (모달 열림)" },
   "cctv-rewind": { source: "library", desc: "녹화 영상 되감기" },
