@@ -14,7 +14,7 @@ type Track = {
 
 const TRACKS: Track[] = [
   { file: "idle.wav", volume: 1, crossfade: 1.5 },
-  { file: "rain.wav", volume: 1, crossfade: 1.5 },
+  { file: "rain.wav", volume: 0.3, crossfade: 1.5 },
 ];
 
 /** 배경음을 켠다. 돌려준 함수를 부르면 끈다 */
