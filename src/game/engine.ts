@@ -25,12 +25,21 @@ export type VarKey = keyof Vars;
 
 /** 모든 키가 맞아야 참. 값이 배열이면 그중 하나 */
 export type Cond = { [K in VarKey]?: NonNullable<Vars[K]> | NonNullable<Vars[K]>[] };
+/** 조건 하나, 또는 조건 여러 개 중 하나라도 맞으면 (예: counter=RECORD 또는 shelf=RESET) */
+export type When = Cond | Cond[];
 
 /**
  * 한 줄 = 대사 한 덩어리. 조건부 묶음은 조건이 맞을 때만 펼쳐진다.
  * 큐(Cue, media.ts)는 바로 뒤 대사가 나올 때 실행되는 연출 지시다.
+ *
+ * slot: 이전 선택을 반영하는 추가 장면 자리 (기획서 6절). options를 위에서부터(우선순위) 보면서
+ * 조건이 맞는 것을 최대 max개까지만 펼친다.
  */
-export type Line = string | Cue | { if: Cond; lines: Line[] };
+export type Line =
+  | string
+  | Cue
+  | { if: When; lines: Line[] }
+  | { slot: string; max: number; options: { id: string; if: When; lines: Line[] }[] };
 
 /** 화면에 한 번에 나오는 대사 한 줄 + 그때 실행할 큐. take = 녹음 파일 이름(목소리 큐가 있을 때) */
 export type Beat = { text: string; cues: Cue[]; take?: string };
@@ -55,6 +64,8 @@ export type Choice = {
   next: string;
 };
 
+export type EndingId = "END-WAIT" | "END-RECORD" | "END-EXIT" | "END-CALL";
+
 export type SceneNode = {
   id: string;
   /** 화면 위에 띄우는 시각 (예: 02:11) */
@@ -74,18 +85,16 @@ export type SceneNode = {
   /** 장면이 끝난 뒤 저장할 상태 */
   set?: Vars;
   question?: { prompt: string; choices: Choice[] };
-  /** 질문이 없는 장면의 다음 장면. "RESULT"면 결과로 */
-  next?: string;
+  /**
+   * 질문이 없는 장면의 다음 장면. "RESULT"면 결과로.
+   * 엔딩별로 갈리면 { "END-WAIT": "TRUTH-WAIT", ... } (진실 공개의 엔딩별 기록)
+   */
+  next?: string | Record<EndingId, string>;
   /** 스토리 엔딩이면 그 id */
   ending?: EndingId;
 };
 
-export type EndingId = "END-WAIT" | "END-RECORD" | "END-EXIT" | "END-CALL";
-
-/** 엔딩 뒤에 붙는 추가 장면 (기획서 6절) */
-export type Extra = { id: string; if: Cond; endings: EndingId[] | "all"; lines: Line[] };
-
-export type Pick = { node: string; key: Choice["key"]; main?: Trait };
+export type Pick = { node: string; key: Choice["key"]; main?: Trait; sub?: Trait };
 
 export type GameState = {
   node: string;
@@ -102,8 +111,9 @@ export const newGame = (start: string): GameState => ({
   picks: [],
 });
 
-export function matches(cond: Cond, vars: Vars): boolean {
-  return (Object.entries(cond) as [VarKey, string | string[]][]).every(([k, want]) => {
+export function matches(when: When, vars: Vars): boolean {
+  if (Array.isArray(when)) return when.some((c) => matches(c, vars));
+  return (Object.entries(when) as [VarKey, string | string[]][]).every(([k, want]) => {
     const have = vars[k];
     return have !== undefined && (Array.isArray(want) ? want.includes(have) : want === have);
   });
@@ -118,6 +128,7 @@ export function resolveLines(lines: Line[], vars: Vars | "all", scene: string): 
   let pending: Cue[] = [];
   let take: string | undefined;
   let voices = 0;
+  const ok = (when: When) => vars === "all" || matches(when, vars);
   const walk = (ls: Line[], on: boolean) => {
     for (const l of ls) {
       if (typeof l === "string") {
@@ -126,7 +137,14 @@ export function resolveLines(lines: Line[], vars: Vars | "all", scene: string): 
         pending = [];
         take = undefined;
       } else if ("if" in l) {
-        walk(l.lines, on && (vars === "all" || matches(l.if, vars)));
+        walk(l.lines, on && ok(l.if));
+      } else if ("slot" in l) {
+        let picked = 0;
+        for (const opt of l.options) {
+          const show = ok(opt.if) && (vars === "all" || picked < l.max);
+          if (show) picked++;
+          walk(opt.lines, on && show);
+        }
       } else {
         if ("voice" in l) {
           voices++;
@@ -142,12 +160,6 @@ export function resolveLines(lines: Line[], vars: Vars | "all", scene: string): 
   return beats;
 }
 
-export function extraLines(extras: Extra[], ending: EndingId, vars: Vars): Beat[] {
-  return extras
-    .filter((x) => (x.endings === "all" || x.endings.includes(ending)) && matches(x.if, vars))
-    .flatMap((x) => resolveLines(x.lines, vars, x.id));
-}
-
 /** 장면을 다 읽은 뒤: 저장 변수 반영 */
 export function enterNode(state: GameState, node: SceneNode): GameState {
   return {
@@ -156,6 +168,14 @@ export function enterNode(state: GameState, node: SceneNode): GameState {
     vars: node.set ? { ...state.vars, ...node.set } : state.vars,
     ending: node.ending ?? state.ending,
   };
+}
+
+/** 질문이 없는 장면의 다음 장면 (enterNode 뒤의 상태로). 없으면 결과 */
+export function nextOf(node: SceneNode, state: GameState): string {
+  const next = node.next;
+  if (!next) return "RESULT";
+  if (typeof next === "string") return next;
+  return state.ending ? next[state.ending] : "RESULT";
 }
 
 export function applyChoice(state: GameState, node: SceneNode, choice: Choice): GameState {
@@ -167,7 +187,7 @@ export function applyChoice(state: GameState, node: SceneNode, choice: Choice): 
   return {
     ...state,
     scores,
-    picks: [...state.picks, { node: node.id, key: choice.key, main: choice.score?.main }],
+    picks: [...state.picks, { node: node.id, key: choice.key, main: choice.score?.main, sub: choice.score?.sub }],
   };
 }
 
@@ -176,15 +196,25 @@ export function applyChoice(state: GameState, node: SceneNode, choice: Choice): 
 export type PersonalityType = { no: number; id: string; name: string; combo: string; desc: string };
 
 /**
- * 유형 결정
+ * 유형 결정 (기획서 7.4)
  * 1. 점수가 가장 높은 성향 = 주요, 두 번째 = 보조
  * 2. 주요가 보조보다 4점 이상 높으면 단독 우세형, 3점 이하면 조합형
- * 3. 동점이면 주요 성향으로 고른 횟수가 많은 쪽, 그래도 같으면 최근에 주요로 고른 쪽
+ * 3. 동점이면 주요 성향으로 고른 횟수가 많은 쪽 → 주요로 가장 최근에 고른 쪽
+ *    → 주요·보조 상관없이 가장 최근에 나온 쪽 → 고정 순서 P > T > A > S
  */
 export function rankTraits(scores: Record<Trait, number>, picks: Pick[]): Trait[] {
-  const count = (t: Trait) => picks.filter((p) => p.main === t).length;
-  const last = (t: Trait) => picks.map((p) => p.main).lastIndexOf(t);
-  return [...TRAITS].sort((a, b) => scores[b] - scores[a] || count(b) - count(a) || last(b) - last(a));
+  const scored = picks.filter((p) => p.main);
+  const count = (t: Trait) => scored.filter((p) => p.main === t).length;
+  const lastMain = (t: Trait) => scored.map((p) => p.main).lastIndexOf(t);
+  const lastAny = (t: Trait) => scored.reduce((at, p, i) => (p.main === t || p.sub === t ? i : at), -1);
+  return [...TRAITS].sort(
+    (a, b) =>
+      scores[b] - scores[a] ||
+      count(b) - count(a) ||
+      lastMain(b) - lastMain(a) ||
+      lastAny(b) - lastAny(a) ||
+      TRAITS.indexOf(a) - TRAITS.indexOf(b),
+  );
 }
 
 export function decideType(

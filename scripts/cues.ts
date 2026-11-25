@@ -9,19 +9,16 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolveLines, type Beat } from "../src/game/engine.ts";
 import { AMB, CAMS, CUTS, FX, PLACE_AMB, ROLES, SFX, SHOTS, VIA, type Cue } from "../src/game/media.ts";
-import { EXTRAS, NODES } from "../src/game/script.ts";
+import { NODES } from "../src/game/script.ts";
 
 type Use = { scene: string; text: string; beat: Beat; cue: Cue };
 
 /** 조건부 대사까지 모두 펼친 장면별 대사 */
-const scenes: { id: string; title: string; beats: Beat[] }[] = [
-  ...Object.values(NODES).map((n) => ({ id: n.id, title: n.title ?? "", beats: resolveLines(n.lines, "all", n.id) })),
-  ...EXTRAS.map((x) => ({
-    id: x.id,
-    title: `추가 장면 (${x.endings === "all" ? "모든 엔딩" : x.endings.join(", ")})`,
-    beats: resolveLines(x.lines, "all", x.id),
-  })),
-];
+const scenes: { id: string; title: string; beats: Beat[] }[] = Object.values(NODES).map((n) => ({
+  id: n.id,
+  title: n.title ?? "",
+  beats: resolveLines(n.lines, "all", n.id),
+}));
 
 const uses: Use[] = [
   // 장면 앞 효과음(intro): 첫 대사 전에 나는 소리

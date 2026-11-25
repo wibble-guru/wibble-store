@@ -35,15 +35,15 @@ type Sound = Entry & {
  * - 파일이 없으면 빈 화면(자리 표시)
  */
 export const CUTS = {
-  "q1-pickup": { desc: "떨어진 과자봉지를 주워 선반에 올린다. 돌아서려는 순간 옆 봉지가 또 떨어진다" },
-  "q1a-box": { desc: "과자 두 봉지를 계산대 아래 상품 보관함에 넣고 뚜껑을 닫는다" },
-  "q2a-under": { desc: "계산대 아래로 몸을 숙인다. 전선·박스 사이 바닥의 물방울 세 개를 손끝으로 만진다" },
-  "q3c-wipe": { desc: "냉장고 문을 열어 터진 캔을 꺼내고 닦는다. 유리 손자국 위로 새 손가락 자국이 생긴다" },
-  "q4-phone": { desc: "계산대 아래 검은 휴대폰을 집어 든다. 화면이 켜지고 잠금화면에 지금의 내가 찍혀 있다" },
+  "q1-pickup": { desc: "떨어진 과자봉지를 주워 선반 한참 안쪽에 밀어 넣는다. 돌아서려는 순간 같은 봉지가 옆 봉지와 함께 발치에 떨어진다" },
+  "q1a-box": { desc: "과자 두 봉지를 계산대 아래 검수함에 넣고 뚜껑을 닫는다" },
+  "q2a-under": { desc: "직원 쪽에서 계산대 아래를 살핀다. 전선·박스 사이, 통로 가까운 바닥에 물방울 세 개" },
+  "q3c-wipe": { desc: "(v4에서 안 씀) 냉장고 문을 열어 터진 캔을 꺼내고 닦는다" },
+  "q4-phone": { desc: "계산대 아래 검은 휴대폰을 집어 든다. 사진 앱에 열린 사진 속에 지금의 내가 찍혀 있다" },
   "q4a-lock": { desc: "휴대폰을 분실물 보관함에 넣고 잠근다" },
-  "q5d-door": { desc: "화장실 문 아래를 들여다본다. 고인 물 위로 발자국이 하나씩 찍힌다" },
+  "q5d-door": { desc: "통로 쪽에서 화장실 문 아래를 살핀다. 물기 있는 타일 위로 통로 쪽을 향한 발자국 흔적이 나타난다" },
   "go-out": { desc: "계산대에서 나와 자동문을 지나 매장 밖으로 나간다 (실외 배경으로 넘어감)" },
-  "exit-door": { desc: "퇴근하며 자동문을 통과한다. 등 뒤에서 젖은 신발 끄는 소리" },
+  "exit-door": { desc: "밝은 도로 쪽으로 가려고 자동문을 통과한다. 등 뒤에서 젖은 신발이 타일에 닿는 소리" },
 } satisfies Record<string, Entry>;
 export type CutId = keyof typeof CUTS;
 
@@ -65,21 +65,26 @@ type Shot = Entry & {
 };
 
 export const SHOTS = {
-  "q2c-replay": { cam: "CAM1", mode: "replay", desc: "손님이 계산대 앞에서 물러난다. 직전에 계산대 아래 사각지대에서 그림자가 움직인다" },
-  "q3d-replay": { cam: "CAM5", mode: "replay", desc: "아무도 없는 냉장고가 흔들리고 캔이 터진다. 유리에 손자국은 보이지 않는다" },
-  "q4d-replay": { cam: "CAM1", mode: "replay", desc: "직원이 자리를 비운 사이 계산대 아래로 검은 물건이 천천히 밀려 들어온다. 가져다 놓은 사람은 없다" },
+  "q2c-replay": { cam: "CAM1", mode: "replay", desc: "손님이 계산대 앞에서 한 발 물러난다. 카운터 아래는 가려져 안 보이고, 카운터 바깥 바닥을 길쭉한 그림자가 잠깐 스친다" },
+  "q3d-replay": { cam: "CAM5", mode: "replay", desc: "(v4에서 안 씀: 점장이 원격으로 확인) 아무도 없는 냉장고가 흔들리고 캔이 터진다" },
+  "q4d-replay": { cam: "CAM1", mode: "replay", desc: "직원이 음료 진열대로 자리를 비운 사이, 카운터 바깥 바닥에 검은 물체가 나타나 카운터 아래 가려진 공간으로 미끄러지듯 들어가 사라진다" },
+  "q7c-door": { cam: "CAM4", mode: "replay", desc: "05:48:15 입장 기록 시각. 자동문은 열려 있지만 아무도 지나가지 않는다" },
+  "q6a-capture": { cam: "CAM1", mode: "live", desc: "점장이 보낸 캡처. 계산대 앞에 고개 숙인 사람, 소매가 짙게 젖고 신발 주위 바닥이 어둡다 (실제 계산대 앞엔 영수증 한 장뿐)" },
   "q8-live": { cam: "CAM1", mode: "live", desc: "계산대 앞에 젖은 옷을 입은 사람이 고개를 숙이고 서 있다 (실제 계산대 앞은 비어 있음)" },
   "q8-live-up": { cam: "CAM1", mode: "live", desc: "그 사람이 고개를 들어 카메라를 본다" },
-  "q8a-live": { cam: "CAM1", mode: "live", desc: "그 사람이 다시 고개를 숙여 계산대 위를 내려다본다" },
+  "q8a-live": { cam: "CAM1", mode: "live", desc: "그 사람이 고개를 숙이고 손을 카운터 위에 올리는 듯한 자세" },
   "q8b-save": { cam: "CAM1", mode: "live", desc: "고개를 든 장면에서 화면 저장 (저장 표시)" },
-  "q8c-rewind": { cam: "CAM2", mode: "rewind", desc: "02:11 진열대 앞에 사람이 서서 과자봉지를 집어 들었다가 떨어뜨린다" },
-  "rec-snack": { cam: "CAM2", mode: "saved", desc: "과자가 떨어진 순간. 진열대 옆에 젖은 옷 손님" },
-  "rec-fridge": { cam: "CAM5", mode: "saved", desc: "캔이 터진 순간. 냉장고 앞에 같은 손님, 조금 더 계산대 쪽" },
-  "rec-restroom": { cam: "CAM5", mode: "saved", desc: "물 내리는 소리가 난 순간. 화장실 통로에 같은 손님, 더 가까이" },
-  "rec-last": { cam: "CAM1", mode: "saved", desc: "휴대폰을 보는 직원 바로 뒤에 손님이 서 있다. 카메라를 보며 입을 움직인다" },
-  "x-witness": { cam: "CAM1", mode: "saved", desc: "(추가 장면) 영상 속 손님의 손. 손등과 소매가 젖어 있다" },
-  "x-angle": { cam: "CAM1", mode: "saved", desc: "(추가 장면) 그 시각 계산대 아래에 누군가 웅크리고 직원을 올려다본다" },
-  "truth-door": { cam: "CAM4", mode: "saved", desc: "자동문 앞의 직원과 바로 뒤의 젖은 옷 손님. 화면 아래 출입 기록 '퇴장 인원 : 2명'" },
+  "q8c-rewind": { cam: "CAM2", mode: "rewind", desc: "02:11 진열대 앞에 사람이 서 있다. 젖은 소매 끝이 선반 가까이 보이고, 손을 거두는 순간 봉지가 떨어진다" },
+  "q8c-0200": { cam: "CAM1", mode: "rewind", desc: "02:00 직원이 출근하는 순간. 화면 가장자리, 계산대 앞에 이미 누군가 서 있다" },
+  "rec-0150": { cam: "CAM1", mode: "saved", desc: "01:50 점장이 계산대 뒤에서 일지를 쓴다. 카운터 앞에 젖은 옷을 입은 사람. 점장은 그쪽을 한 번도 보지 않는다" },
+  "rec-snack": { cam: "CAM2", mode: "saved", desc: "02:11 과자봉지가 떨어진 곳 옆에 젖은 소매" },
+  "rec-fridge": { cam: "CAM5", mode: "saved", desc: "02:46 냉장고 사고 직전, 통로 반대편에 같은 옷차림의 사람. 냉장고 유리 앞을 지나간 기록은 없다" },
+  "rec-restroom": { cam: "CAM5", mode: "saved", desc: "03:37 닫힌 화장실 문 앞에 사람이 잠시 서 있다 (화장실 내부는 안 찍힘)" },
+  "rec-0200": { cam: "CAM1", mode: "saved", desc: "02:00 자동문이 열리고 직원이 들어온다. 카운터 앞의 사람이 점장에게서 몸을 돌려 출입문 쪽을 보고, 직원이 걷는 동안 고개가 따라 움직인다" },
+  "rec-last": { cam: "CAM1", mode: "saved", desc: "(v4에서 안 씀) 휴대폰을 보는 직원 바로 뒤에 손님이 서 있다" },
+  "x-witness": { cam: "CAM1", mode: "saved", desc: "(추가 장면 EXTRA-02) 영상 속 손님의 소매 끝이 젖어 있고 손등이 잠깐 보인다" },
+  "x-angle": { cam: "CAM1", mode: "saved", desc: "(추가 장면 EXTRA-03) 03:14 카운터 옆쪽으로 젖은 소매가 들어갔다가 사라진다. 하단은 사각지대" },
+  "truth-door": { cam: "CAM4", mode: "saved", desc: "(TRUTH-EXIT) 05:58:04 문이 닫히기 직전, 젖은 옷자락이 프레임을 지나간다" },
 } satisfies Record<string, Shot>;
 export type ShotId = keyof typeof SHOTS;
 
@@ -88,15 +93,15 @@ export type ShotId = keyof typeof SHOTS;
 export const FX = {
   "snack-floor": { desc: "과자 진열대 앞 바닥에 떨어진 과자봉지" },
   "can-burst": { desc: "음료 냉장고 유리 안쪽에 터진 탄산 거품이 흘러내림" },
-  handprint: { desc: "거품 사이, 냉장고 안쪽에서 찍힌 손바닥 자국" },
-  "finger-slide": { desc: "손가락 자국 하나가 아래로 길게 미끄러짐" },
-  "sign-fridge": { desc: "냉장고 앞 청소 중 안내판" },
+  handprint: { desc: "거품 사이 유리 안쪽에 남은 다섯 갈래 손가락 자국 (손바닥 부분은 거의 없음)" },
+  "finger-slide": { desc: "가장 긴 손가락 자국이 아래로 늘어나 있고 그 자국만 위쪽이 깨끗이 지워져 있음 (사진 비교 컷. 움직이는 모습은 보여주지 않음)" },
+  "sign-fridge": { desc: "냉장고 앞 사용 중지 안내판" },
   "sign-moved": { desc: "안내판이 옆으로 조금 옮겨져 있음" },
   "sign-fallen": { desc: "안내판이 바닥에 쓰러져 있음" },
   "water-door": { desc: "화장실 문 아래로 물이 조금씩 흘러나옴" },
   footprint: { desc: "화장실 앞, 바깥쪽을 향한 젖은 발자국 하나" },
   "footprint-door": { desc: "출입문 근처의 같은 젖은 발자국" },
-  "sign-restroom": { desc: "화장실 통로 청소 중 안내판" },
+  "sign-restroom": { desc: "화장실 통로 사용 중지 안내판" },
   "wet-floor-door": { desc: "자동문 앞 바닥이 젖어 있음" },
   "door-stuck": { desc: "자동문이 닫히지 않고 열려 있음" },
   "sensor-on": { desc: "자동문 위 센서 불이 켜짐" },
@@ -171,7 +176,7 @@ export type SfxId = keyof typeof SFX;
 export const AMB = {
   store: { source: "library", desc: "형광등 웅웅 + 냉장고 컴프레서. 매장 안 기본" },
   "rain-in": { source: "library", desc: "유리 너머 빗소리. 매장 안 기본" },
-  "fridge-only": { source: "library", desc: "다른 소리가 빠지고 냉장고 작동음만 (T-QUIET)" },
+  "fridge-only": { source: "library", desc: "다른 소리가 빠지고 냉장고 작동음만 (TRANSITION-01)" },
   "rain-out": { source: "library", desc: "바깥 빗소리, 젖은 길. 매장 밖 기본" },
   street: { source: "record", desc: "새벽 거리 (가능하면 실제 편의점 앞 현장 녹음)" },
   "cctv-noise": { source: "library", desc: "녹화 영상 잡음. CCTV 모달이 열려 있는 동안, 매장 소리는 낮춘다" },
@@ -189,9 +194,12 @@ export type Place = "inside" | "outside";
 
 export const ROLES = {
   manager: "점장. 통화 대사가 가장 많다. 문자 메시지는 목소리 없음",
-  guest: "Q2의 살아 있는 손님. 계산대 아래 손을 처음 본 사람",
+  guest: "Q2의 후드 차림 손님. 계산대 아래 손을 처음 본 사람",
+  passer: "TRANSITION-01에서 생수를 사 가는 손님",
+  last: "Q7의 마지막 일반 손님. 출입문에서 누군가에게 길을 비켜 준다",
+  prev: "이전 야간 근무자. TRUTH-CALL의 음성 메시지",
   woman: "화장실 목소리 = 젖은 옷 손님. 같은 배우가 맡으면 끝에서 연결된다",
-  player: "플레이어(직원). 성별 미정 — 중성적 목소리로 녹음하거나 목소리 없이 자막만 둘지 결정 필요. Q6 되풀이와 END-CALL '다른 목소리'도 이 배역",
+  player: "플레이어(직원). 성별 미정 — 중성적 목소리로 녹음하거나 목소리 없이 자막만 둘지 결정 필요. Q6 되풀이와 END-CALL 모방 목소리도 이 배역",
 } as const;
 export type Role = keyof typeof ROLES;
 
@@ -222,6 +230,7 @@ export type Via = keyof typeof VIA;
  *   소리가 끝나면 대사가 나온다
  * - sfx에 walk: [출발, 도착]을 주면 걸음(SFX의 steps)마다 소리 위치를 출발 → 도착으로 옮기고
  *   시선도 걷는 사람을 따라 돌린다. 매장 안 장면에서만 쓴다
+ * - clock: 장면 중간에 화면 위 시각을 바꾼다 (시간 경과 몽타주, END-WAIT의 05:59)
  */
 export type Cue =
   | { cut: CutId; hold?: number }
@@ -230,4 +239,5 @@ export type Cue =
   | { sfx: SfxId; wait?: boolean; walk?: [Spot, Spot] }
   | { amb: AmbId }
   | { voice: Role; via?: Via }
-  | { door: "open" | "close" };
+  | { door: "open" | "close" }
+  | { clock: string };
