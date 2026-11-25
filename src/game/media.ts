@@ -1,5 +1,6 @@
 /**
- * 연출 목록: 컷씬, CCTV 장면, 매장 화면 위 연출, 효과음, 환경음, 목소리 배역.
+ * 연출 목록: 컷씬, CCTV 장면, 휴대폰 사진·영상 화면, 매장 화면 위 연출, 효과음, 환경음.
+ * 대사는 텍스트로만 나온다(목소리 녹음 없음, 스토리 바이블 v4.1).
  *
  * 대본(script.ts)의 큐는 여기 있는 id만 쓸 수 있다(타입 검사).
  * 그림·소리 파일이 생기면 해당 항목의 file 칸을 채운다.
@@ -38,12 +39,12 @@ export const CUTS = {
   "q1-pickup": { desc: "떨어진 과자봉지를 주워 선반 한참 안쪽에 밀어 넣는다. 돌아서려는 순간 같은 봉지가 옆 봉지와 함께 발치에 떨어진다" },
   "q1a-box": { desc: "과자 두 봉지를 계산대 아래 검수함에 넣고 뚜껑을 닫는다" },
   "q2a-under": { desc: "직원 쪽에서 계산대 아래를 살핀다. 전선·박스 사이, 통로 가까운 바닥에 물방울 세 개" },
-  "q3c-wipe": { desc: "(v4에서 안 씀) 냉장고 문을 열어 터진 캔을 꺼내고 닦는다" },
   "q4-phone": { desc: "계산대 아래 검은 휴대폰을 집어 든다. 사진 앱에 열린 사진 속에 지금의 내가 찍혀 있다" },
   "q4a-lock": { desc: "휴대폰을 분실물 보관함에 넣고 잠근다" },
   "q5d-door": { desc: "통로 쪽에서 화장실 문 아래를 살핀다. 물기 있는 타일 위로 통로 쪽을 향한 발자국 흔적이 나타난다" },
   "go-out": { desc: "계산대에서 나와 자동문을 지나 매장 밖으로 나간다 (실외 배경으로 넘어감)" },
   "exit-door": { desc: "밝은 도로 쪽으로 가려고 자동문을 통과한다. 등 뒤에서 젖은 신발이 타일에 닿는 소리" },
+  "exit-reflection": { desc: "(END-EXIT 마지막) 손에 든 휴대폰 화면이 저절로 꺼지고, 검은 화면에 내 얼굴과 어깨 바로 뒤 젖은 소매 끝이 비친다. 소매 끝에서 물이 한 방울 떨어진다" },
 } satisfies Record<string, Entry>;
 export type CutId = keyof typeof CUTS;
 
@@ -66,9 +67,8 @@ type Shot = Entry & {
 
 export const SHOTS = {
   "q2c-replay": { cam: "CAM1", mode: "replay", desc: "손님이 계산대 앞에서 한 발 물러난다. 카운터 아래는 가려져 안 보이고, 카운터 바깥 바닥을 길쭉한 그림자가 잠깐 스친다" },
-  "q3d-replay": { cam: "CAM5", mode: "replay", desc: "(v4에서 안 씀: 점장이 원격으로 확인) 아무도 없는 냉장고가 흔들리고 캔이 터진다" },
   "q4d-replay": { cam: "CAM1", mode: "replay", desc: "직원이 음료 진열대로 자리를 비운 사이, 카운터 바깥 바닥에 검은 물체가 나타나 카운터 아래 가려진 공간으로 미끄러지듯 들어가 사라진다" },
-  "q7c-door": { cam: "CAM4", mode: "replay", desc: "05:48:15 입장 기록 시각. 자동문은 열려 있지만 아무도 지나가지 않는다" },
+  "q7c-door": { cam: "CAM4", mode: "replay", desc: "05:48:12 마지막 손님이 나가고 문이 열린 채 3초. 05:48:15 아무도 지나가지 않았는데 문턱 안쪽 타일에 젖은 발자국 하나가 생긴다 (발끝은 매장 안쪽)" },
   "q6a-capture": { cam: "CAM1", mode: "live", desc: "점장이 보낸 캡처. 계산대 앞에 고개 숙인 사람, 소매가 짙게 젖고 신발 주위 바닥이 어둡다 (실제 계산대 앞엔 영수증 한 장뿐)" },
   "q8-live": { cam: "CAM1", mode: "live", desc: "계산대 앞에 젖은 옷을 입은 사람이 고개를 숙이고 서 있다 (실제 계산대 앞은 비어 있음)" },
   "q8-live-up": { cam: "CAM1", mode: "live", desc: "그 사람이 고개를 들어 카메라를 본다" },
@@ -81,12 +81,31 @@ export const SHOTS = {
   "rec-fridge": { cam: "CAM5", mode: "saved", desc: "02:46 냉장고 사고 직전, 통로 반대편에 같은 옷차림의 사람. 냉장고 유리 앞을 지나간 기록은 없다" },
   "rec-restroom": { cam: "CAM5", mode: "saved", desc: "03:37 닫힌 화장실 문 앞에 사람이 잠시 서 있다 (화장실 내부는 안 찍힘)" },
   "rec-0200": { cam: "CAM1", mode: "saved", desc: "02:00 자동문이 열리고 직원이 들어온다. 카운터 앞의 사람이 점장에게서 몸을 돌려 출입문 쪽을 보고, 직원이 걷는 동안 고개가 따라 움직인다" },
-  "rec-last": { cam: "CAM1", mode: "saved", desc: "(v4에서 안 씀) 휴대폰을 보는 직원 바로 뒤에 손님이 서 있다" },
   "x-witness": { cam: "CAM1", mode: "saved", desc: "(추가 장면 EXTRA-02) 영상 속 손님의 소매 끝이 젖어 있고 손등이 잠깐 보인다" },
   "x-angle": { cam: "CAM1", mode: "saved", desc: "(추가 장면 EXTRA-03) 03:14 카운터 옆쪽으로 젖은 소매가 들어갔다가 사라진다. 하단은 사각지대" },
-  "truth-door": { cam: "CAM4", mode: "saved", desc: "(TRUTH-EXIT) 05:58:04 문이 닫히기 직전, 젖은 옷자락이 프레임을 지나간다" },
+  "truth-door": { cam: "CAM4", mode: "saved", desc: "(END-EXIT, TRUTH-EXIT) 05:58:04 문이 닫히기 직전, 젖은 옷자락이 프레임을 지나간다" },
+  "exit-0558": { cam: "CAM4", mode: "saved", desc: "(END-EXIT-IN, TRUTH-EXIT) 05:58:02 직원이 혼자 자동문을 나선다" },
+  "exit-0549": { cam: "CAM4", mode: "saved", desc: "(END-EXIT-OUT, TRUTH-EXIT) 05:49:02 직원이 처마 아래로 나간다" },
+  "call-twin-in": { cam: "CAM1", mode: "live", desc: "(END-CALL-IN 마지막) 카운터 옆에 휴대폰을 귀에 댄 직원, 바로 등 뒤에 젖은 소매의 사람이 같은 자세로 빈손을 귀에 대고 서 있다" },
+  "call-twin-out": { cam: "CAM4", mode: "live", desc: "(END-CALL-OUT 마지막) 처마 아래 휴대폰을 귀에 댄 직원, 유리문 바로 안쪽에 젖은 소매의 사람이 같은 자세로 유리 한 장을 사이에 두고 등 뒤에 서 있다" },
+  "truth-call": { cam: "CAM1", mode: "saved", desc: "(TRUTH-CALL) 한 달 전. 휴대폰을 귀에 댄 이전 근무자 옆에 젖은 옷의 사람이 같은 자세로 서 있고, 고개 끄덕임도 한 박자 늦게 따라 한다" },
 } satisfies Record<string, Shot>;
 export type ShotId = keyof typeof SHOTS;
+
+// ------------------------------------------------------------------ 휴대폰 사진·영상 화면
+
+/** 메신저·사진 앱 안에 들어가는 그림. 휴대폰 화면 디자인은 Figma에서 확정한 뒤 만든다 */
+export const PHOTOS = {
+  "q1d-photo": { desc: "(Q1-D) 점장에게 보낸 과자 진열대 사진. 통로 끝 냉장고 유리 앞에 사람 어깨 같은 흐릿한 얼룩" },
+  "q2d-video": { desc: "(Q2-D) 카운터 아래를 찍은 영상. 전선과 박스뿐, 아무도 없다" },
+  "q4-photo": { desc: "(Q4) 주운 휴대폰 속 사진. 계산대 아래 바닥에서 올려다본 각도로 찍힌 지금의 나. 앞쪽 카운터 모서리에 물방울 하나" },
+  "q4b-zoom": { desc: "(Q4-B) 사진 확대. 카운터 모서리에 맺힌 물방울" },
+  "q6c-frame": { desc: "(Q6-C) 영상 통화가 멈춘 한 프레임. 빈 카운터 앞, 화면 가장자리에 젖은 소매 끝" },
+  "out-video": { desc: "(Q8-OUT-A) 유리문 밖에서 찍은 영상. 유리 반사 너머 카운터 앞에 누군가 서 있다" },
+  "x-fridge": { desc: "(EXTRA-05) 냉장고 손자국 사진. 바깥 유리 반사 속에 짙은 옷자락 같은 것" },
+  "truth-01-video": { desc: "(TRUTH-01) 이전 근무자가 찍은 영상. 텅 빈 카운터와 호출벨" },
+} satisfies Record<string, Entry>;
+export type PhotoId = keyof typeof PHOTOS;
 
 // ------------------------------------------------------------------ 매장 화면 위 연출 (배경은 그대로, 위에 얹는 그림·움직임)
 
@@ -123,7 +142,6 @@ export const SFX = {
   "door-close-dry": { source: "record", side: "left", desc: "자동문 닫힘, 빗소리 없음. 바깥 빗소리가 따로 깔려 있을 때 (닫히려다 다시 열리는 대목)", file: "door-close(without-rain).wav" },
   "wet-step": { source: "record", desc: "매장 타일 위 젖은 신발 '철벅'" },
   "wet-step-out": { source: "record", desc: "젖은 바깥 길 위 '철벅'" },
-  "drag-wet": { source: "record", desc: "젖은 신발이 바닥을 끄는 소리" },
   "snack-drop": { source: "record", desc: "과자봉지가 바닥에 떨어지는 '툭'", file: "drop.wav", skip: 0.18 },
   "snack-rustle": { source: "record", desc: "과자봉지 구겨지는 '바스락'", file: "crisp.wav" },
   // 라이브러리로 충분
@@ -139,6 +157,9 @@ export const SFX = {
   // 들릴 듯 말 듯 작게
   "phone-shutter": { source: "library", desc: "내 휴대폰 카메라 셔터", file: "camera.mp3", volume: 0.25 },
   msg: { source: "library", desc: "메시지 알림" },
+  "msg-sent": { source: "library", desc: "메시지 '전송됨' 소리. msg와 짝을 이루되 더 가볍게 (END-WAIT: 내가 보내지 않은 메시지)" },
+  "video-call": { source: "library", desc: "영상 통화 연결 신호음" },
+  "phone-sleep": { source: "library", desc: "휴대폰 화면 꺼지는 작은 '딸깍' (선택. 무음이 더 무서우면 안 씀)" },
   "phone-vibe": { source: "library", desc: "휴대폰 진동 (전화 옴)" },
   scan: { source: "library", desc: "바코드 스캔·POS" },
   "plastic-bag": { source: "library", desc: "비닐봉지" },
@@ -146,13 +167,10 @@ export const SFX = {
   drip: { source: "library", desc: "물방울 '톡'" },
   glitch: { source: "library", desc: "휴대폰 영상 글리치 '탁'" },
   "can-burst": { source: "library", desc: "캔 터짐 '펑!' + 탄산 거품", file: "short_bomb.mp3" },
-  "fridge-door": { source: "library", desc: "냉장고 문 열기" },
-  wipe: { source: "library", desc: "바닥·유리 닦기" },
-  "finger-squeak": { source: "library", desc: "젖은 유리 위 손가락 미끄러지는 소리" },
   "sign-set": { source: "library", desc: "안내판 세우기" },
-  "sign-drag": { source: "library", desc: "안내판이 끌리는 소리" },
   flush: { source: "library", side: "right", desc: "물 내림 '쏴아아'", file: "toilet-flush.wav" },
   knock: { source: "library", side: "right", desc: "문 안쪽 노크 '똑. 똑. 똑.'", file: "knock.mp3" },
+  "knock-glass": { source: "record", desc: "등 뒤 진열장 유리를 손가락 마디로 '똑. 똑. 똑.' knock과 같은 간격, 더 딱딱하고 맑게 (Q5-A)" },
   "water-seep": { source: "library", side: "right", desc: "문 아래로 물 흐르는 소리" },
   "steps-behind": { source: "library", side: "right", desc: "문 바로 뒤 발소리", file: "footstep.wav" },
   footstep: {
@@ -161,7 +179,6 @@ export const SFX = {
     file: "footstep.wav",
     steps: [0.215, 1.135, 1.955, 2.885, 3.705, 4.64],
   },
-  drag: { source: "library", side: "right", desc: "문 안쪽에서 바닥 끄는 '스윽. 스윽.'" },
   "sensor-beep": { source: "library", side: "left", desc: "출입 센서 감지음" },
   // CCTV 모달: 열기·닫기 소리(cctv-on, cctv-off)는 모달이 알아서 낸다
   "cctv-on": { source: "library", desc: "CCTV 모니터 켜짐 (모달 열림)" },
@@ -190,31 +207,6 @@ export const PLACE_AMB: Record<Place, AmbId[]> = {
 };
 export type Place = "inside" | "outside";
 
-// ------------------------------------------------------------------ 목소리
-
-export const ROLES = {
-  manager: "점장. 통화 대사가 가장 많다. 문자 메시지는 목소리 없음",
-  guest: "Q2의 후드 차림 손님. 계산대 아래 손을 처음 본 사람",
-  passer: "TRANSITION-01에서 생수를 사 가는 손님",
-  last: "Q7의 마지막 일반 손님. 출입문에서 누군가에게 길을 비켜 준다",
-  prev: "이전 야간 근무자. TRUTH-CALL의 음성 메시지",
-  woman: "화장실 목소리 = 젖은 옷 손님. 같은 배우가 맡으면 끝에서 연결된다",
-  player: "플레이어(직원). 성별 미정 — 중성적 목소리로 녹음하거나 목소리 없이 자막만 둘지 결정 필요. Q6 되풀이와 END-CALL 모방 목소리도 이 배역",
-} as const;
-export type Role = keyof typeof ROLES;
-
-/** 목소리가 어떻게 들리는지 (후처리 지시) */
-export const VIA = {
-  phone: "통화음 필터",
-  door: "문 너머로 먹먹하게",
-  whisper: "아주 작게, 속삭임",
-  mic: "휴대폰 마이크 녹음본. 잡음 섞임",
-  video: "영상 속. 입 모양만 보이고 무음이어도 됨",
-  behind: "바로 뒤, 귀에 가깝게",
-  echo: "멀리서 되풀이되는 내 목소리 (Q5-A 녹음 재사용 가능)",
-} as const;
-export type Via = keyof typeof VIA;
-
 // ------------------------------------------------------------------ 큐: 대본 줄 사이에 끼워 넣는 연출 지시
 
 /**
@@ -222,7 +214,7 @@ export type Via = keyof typeof VIA;
  * - cut: 매장 화면을 덮고 컷씬을 띄운다. hold = 이 대사부터 몇 줄 동안 보일지 (기본 1). 장면이 바뀌면 닫힌다
  * - cctv: 모달을 열거나 장면을 바꾼다. null 이면 닫는다. 장면(노드)이 바뀌면 자동으로 닫힌다
  * - amb: 장소 기본 환경음 위에 덧씌운다. 장면이 바뀌면 풀린다
- * - voice: 바로 다음 대사를 녹음한 목소리로 튼다. 파일 이름은 `장면id.순번`
+ * - photo: 휴대폰 화면(메신저·사진 앱) 안에 사진·영상을 띄운다. 지금은 자리만 잡혀 있다
  * - door: 출입문이 열리고 닫힌다. 문 소리와 문 너머 바깥 빗소리를 크로스페이드로 묶어 낸다 (src/door.ts).
  *   open 하면 빗소리가 장면이 바뀌어도 계속 이어지다가 close 때 잦아든다. close가 없으면 진행이 끝날 때까지.
  *   문 소리는 열 때만 낸다. 닫힐 때 문 소리가 필요하면 { sfx: "door-close" }를 따로 둔다
@@ -238,6 +230,6 @@ export type Cue =
   | { fx: FxId }
   | { sfx: SfxId; wait?: boolean; walk?: [Spot, Spot] }
   | { amb: AmbId }
-  | { voice: Role; via?: Via }
+  | { photo: PhotoId }
   | { door: "open" | "close" }
   | { clock: string };

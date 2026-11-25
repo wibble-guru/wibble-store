@@ -2,13 +2,12 @@
  * 대본의 연출 큐를 모아 제작용 큐 시트(docs/CUES.md)를 만든다.
  *   pnpm cues
  *
- * - 컷씬·CCTV·화면 연출·효과음·환경음: 어느 장면 어느 대사에서 쓰이는지
- * - 목소리: 배역별 녹음 대본 (파일 이름 = 장면id.순번)
+ * - 컷씬·CCTV·휴대폰 화면·화면 연출·효과음·환경음: 어느 장면 어느 대사에서 쓰이는지
  * - 목록(media.ts)에 있는데 대본에서 안 쓰이는 항목
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolveLines, type Beat } from "../src/game/engine.ts";
-import { AMB, CAMS, CUTS, FX, PLACE_AMB, ROLES, SFX, SHOTS, VIA, type Cue } from "../src/game/media.ts";
+import { AMB, CAMS, CUTS, FX, PHOTOS, PLACE_AMB, SFX, SHOTS, type Cue } from "../src/game/media.ts";
 import { NODES } from "../src/game/script.ts";
 
 type Use = { scene: string; text: string; beat: Beat; cue: Cue };
@@ -17,7 +16,7 @@ type Use = { scene: string; text: string; beat: Beat; cue: Cue };
 const scenes: { id: string; title: string; beats: Beat[] }[] = Object.values(NODES).map((n) => ({
   id: n.id,
   title: n.title ?? "",
-  beats: resolveLines(n.lines, "all", n.id),
+  beats: resolveLines(n.lines, "all"),
 }));
 
 const uses: Use[] = [
@@ -71,6 +70,7 @@ out.push("## CCTV 모달\n", "| 칸 | 비추는 곳 |", "|---|---|");
 for (const [cam, desc] of Object.entries(CAMS)) out.push(`| ${cam} | ${desc} |`);
 out.push("");
 section("CCTV 장면", SHOTS, (c) => ("cctv" in c ? c.cctv : null), (id) => ` · **${SHOTS[id].cam} ${SHOTS[id].mode}**`);
+section("휴대폰 사진·영상 화면", PHOTOS, (c) => ("photo" in c ? c.photo : null));
 section("매장 화면 위 연출", FX, (c) => ("fx" in c ? c.fx : null));
 section("효과음", SFX, (c) => ("sfx" in c ? c.sfx : null));
 
@@ -90,20 +90,6 @@ section("환경음", AMB, (c) => ("amb" in c ? c.amb : null), (id) => {
 // 모달·장소가 알아서 트는 소리는 대본에 큐가 없어도 된다
 const auto = new Set(["효과음 cctv-on", "효과음 cctv-off", "환경음 store", "환경음 rain-in", "환경음 rain-out", "환경음 street", "환경음 cctv-noise"]);
 
-out.push("## 목소리 녹음 대본\n");
-out.push("| 후처리 | 설명 |", "|---|---|");
-for (const [via, desc] of Object.entries(VIA)) out.push(`| \`${via}\` | ${desc} |`);
-out.push("");
-for (const [role, desc] of Object.entries(ROLES)) {
-  const takes = uses.filter((u) => "voice" in u.cue && u.cue.voice === role);
-  out.push(`### ${role} — ${takes.length}줄\n`, desc, "", "| 파일 | 장면 | 대사 | 후처리 |", "|---|---|---|---|");
-  for (const u of takes) {
-    const via = "voice" in u.cue ? u.cue.via : undefined;
-    out.push(`| \`${u.beat.take}\` | ${u.scene} | ${u.text.replace(/\n/g, " ")} | ${via ?? "—"} |`);
-  }
-  out.push("");
-}
-
 const warn = unused.filter((u) => !auto.has(u));
 if (warn.length) out.push("## 대본에서 안 쓰이는 항목\n", ...warn.map((w) => `- ${w}`), "");
 
@@ -112,6 +98,6 @@ writeFileSync("docs/CUES.md", out.join("\n"));
 
 const count = (k: string) => uses.filter((u) => k in u.cue).length;
 console.log(
-  `docs/CUES.md · 컷씬 ${count("cut")} · CCTV ${count("cctv")} · 연출 ${count("fx")} · 효과음 ${count("sfx")} · 환경음 ${count("amb")} · 목소리 ${count("voice")}`,
+  `docs/CUES.md · 컷씬 ${count("cut")} · CCTV ${count("cctv")} · 연출 ${count("fx")} · 효과음 ${count("sfx")} · 환경음 ${count("amb")} · 휴대폰 화면 ${count("photo")}`,
 );
 if (warn.length) console.log(`안 쓰이는 항목: ${warn.join(", ")}`);

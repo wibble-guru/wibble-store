@@ -13,7 +13,7 @@ import {
   type GameState,
   type PersonalityType,
 } from "./game/engine";
-import { CUTS, SHOTS, type Cue, type CutId, type Place, type ShotId } from "./game/media";
+import { CUTS, PHOTOS, SHOTS, type Cue, type CutId, type Place, type ShotId } from "./game/media";
 import { NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
@@ -131,7 +131,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   }, [place]);
 
   const node = NODES[game.node];
-  const beats = useMemo(() => resolveLines(node.lines, game.vars, node.id), [node, game.vars]);
+  const beats = useMemo(() => resolveLines(node.lines, game.vars), [node, game.vars]);
   const lines = beats.map((b) => b.text);
   const done = lineIdx >= lines.length - 1;
   // CCTV 모달: 이 장면에서 지금 줄까지 마지막으로 연 화면. 장면이 바뀌면 닫힌다
@@ -302,7 +302,7 @@ function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null
     else if ("sfx" in c)
       items.push(`효과음 ${c.sfx}${c.walk ? ` (${c.walk[0]} → ${c.walk[1]} 걸음)` : ""}${c.wait ? " (끝날 때까지 대기)" : ""}`);
     else if ("amb" in c) items.push(`환경음 ${c.amb}`);
-    else if ("voice" in c) items.push(`목소리 ${c.voice}${c.via ? `(${c.via})` : ""} · ${beat?.take}`);
+    else if ("photo" in c) items.push(`휴대폰 화면 ${c.photo} — ${PHOTOS[c.photo].desc}`);
     else if ("door" in c) items.push(`출입문 ${c.door} (문 소리 + 바깥 빗소리)`);
     else if ("clock" in c) items.push(`시각 ${c.clock}`);
   }

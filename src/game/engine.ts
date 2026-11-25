@@ -41,8 +41,8 @@ export type Line =
   | { if: When; lines: Line[] }
   | { slot: string; max: number; options: { id: string; if: When; lines: Line[] }[] };
 
-/** 화면에 한 번에 나오는 대사 한 줄 + 그때 실행할 큐. take = 녹음 파일 이름(목소리 큐가 있을 때) */
-export type Beat = { text: string; cues: Cue[]; take?: string };
+/** 화면에 한 번에 나오는 대사 한 줄 + 그때 실행할 큐 */
+export type Beat = { text: string; cues: Cue[] };
 
 /** 시선 방향 (도). 0 = 정면 통로, + 오른쪽. 파노라마 범위를 넘으면 갈 수 있는 끝까지 */
 export const SPOTS = {
@@ -121,21 +121,17 @@ export function matches(when: When, vars: Vars): boolean {
 
 /**
  * 대사와 큐를 화면 순서대로 펼친다. vars 가 "all"이면 조건을 모두 참으로 본다(큐 시트용).
- * 목소리 순번은 조건과 상관없이 대본에 적힌 순서라서, 어떤 갈래로 와도 파일 이름이 같다.
  */
-export function resolveLines(lines: Line[], vars: Vars | "all", scene: string): Beat[] {
+export function resolveLines(lines: Line[], vars: Vars | "all"): Beat[] {
   const beats: Beat[] = [];
   let pending: Cue[] = [];
-  let take: string | undefined;
-  let voices = 0;
   const ok = (when: When) => vars === "all" || matches(when, vars);
   const walk = (ls: Line[], on: boolean) => {
     for (const l of ls) {
       if (typeof l === "string") {
         if (!on) continue;
-        beats.push(take ? { text: l, cues: pending, take } : { text: l, cues: pending });
+        beats.push({ text: l, cues: pending });
         pending = [];
-        take = undefined;
       } else if ("if" in l) {
         walk(l.lines, on && ok(l.if));
       } else if ("slot" in l) {
@@ -145,12 +141,8 @@ export function resolveLines(lines: Line[], vars: Vars | "all", scene: string): 
           if (show) picked++;
           walk(opt.lines, on && show);
         }
-      } else {
-        if ("voice" in l) {
-          voices++;
-          if (on) take = `${scene}.${voices}`;
-        }
-        if (on) pending.push(l);
+      } else if (on) {
+        pending.push(l);
       }
     }
   };
