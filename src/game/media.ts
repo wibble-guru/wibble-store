@@ -121,7 +121,7 @@ export const FX = {
   footprint: { desc: "화장실 앞, 바깥쪽을 향한 젖은 발자국 하나" },
   "footprint-door": { desc: "출입문 근처의 같은 젖은 발자국" },
   "sign-restroom": { desc: "화장실 통로 사용 중지 안내판" },
-  "wet-floor-door": { desc: "자동문 앞 바닥이 젖어 있음" },
+  "wet-floor-door": { desc: "자동문 안쪽 타일만 젖어 있고, 문 앞 매트와 우산꽂이는 말라 있음" },
   "door-stuck": { desc: "자동문이 닫히지 않고 열려 있음" },
   "sensor-on": { desc: "자동문 위 센서 불이 켜짐" },
 } satisfies Record<string, Entry>;
