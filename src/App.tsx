@@ -13,7 +13,7 @@ import {
   type GameState,
   type PersonalityType,
 } from "./game/engine";
-import { CUTS, SHOTS, type Cue, type CutId, type Place, type ShotId } from "./game/media";
+import { CUTS, PHOTOS, SHOTS, SPEAKERS, type Cue, type CutId, type Place, type ShotId, type Speaker } from "./game/media";
 import { NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
@@ -131,7 +131,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   }, [place]);
 
   const node = NODES[game.node];
-  const beats = useMemo(() => resolveLines(node.lines, game.vars, node.id), [node, game.vars]);
+  const beats = useMemo(() => resolveLines(node.lines, game.vars), [node, game.vars]);
   const lines = beats.map((b) => b.text);
   const done = lineIdx >= lines.length - 1;
   // CCTV 모달: 이 장면에서 지금 줄까지 마지막으로 연 화면. 장면이 바뀌면 닫힌다
@@ -232,7 +232,8 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   }
 
   // 장면 앞 소리 중에는 비워 두고, 줄 소리를 기다리는 중에는 앞 줄들만 보여 준다
-  const shown = entering ? [] : listening ? lines.slice(Math.max(0, lineIdx - 3), lineIdx) : lines.slice(Math.max(0, lineIdx - 2), lineIdx + 1);
+  const shownFrom = listening ? Math.max(0, lineIdx - 3) : Math.max(0, lineIdx - 2);
+  const shown = entering ? [] : beats.slice(shownFrom, listening ? lineIdx : lineIdx + 1);
 
   return (
     <>
@@ -257,8 +258,8 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
       <section ref={panelRef} className={`panel${asking ? " asking" : ""}`}>
         {!asking ? (
           <button ref={linesRef} className="lines" onClick={advance} aria-label="다음">
-            {shown.map((l, i) => (
-              <Line key={`${node.id}-${lineIdx - shown.length + 1 + i}`} text={l} current={i === shown.length - 1} />
+            {shown.map((b, i) => (
+              <Line key={`${node.id}-${shownFrom + i}`} text={b.text} who={speakerOf(b)} current={i === shown.length - 1} />
             ))}
             {!waiting && (
               <span className="more" aria-hidden="true">
@@ -269,7 +270,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
         ) : (
           <div className="question">
             <div className="lines static">
-              <Line text={lines[lines.length - 1]} current={false} />
+              <Line text={lines[lines.length - 1]} who={speakerOf(beats[beats.length - 1])} current={false} />
             </div>
             {node.question!.prompt && <p className="prompt">{node.question!.prompt}</p>}
             <div className="choices">
@@ -302,7 +303,7 @@ function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null
     else if ("sfx" in c)
       items.push(`효과음 ${c.sfx}${c.walk ? ` (${c.walk[0]} → ${c.walk[1]} 걸음)` : ""}${c.wait ? " (끝날 때까지 대기)" : ""}`);
     else if ("amb" in c) items.push(`환경음 ${c.amb}`);
-    else if ("voice" in c) items.push(`목소리 ${c.voice}${c.via ? `(${c.via})` : ""} · ${beat?.take}`);
+    else if ("photo" in c) items.push(`휴대폰 화면 ${c.photo} — ${PHOTOS[c.photo].desc}`);
     else if ("door" in c) items.push(`출입문 ${c.door} (문 소리 + 바깥 빗소리)`);
     else if ("clock" in c) items.push(`시각 ${c.clock}`);
   }
@@ -328,8 +329,14 @@ function runSound(c: Cue, onLook: (deg: number) => void): Promise<void> | undefi
   if ("door" in c) (c.door === "open" ? openDoor : closeDoor)();
 }
 
-/** "[점장님]\n..." 처럼 대괄호로 시작하는 줄은 메시지 카드로 */
-function Line({ text, current }: { text: string; current: boolean }) {
+/** 이 대사를 말하는 사람 (who 큐) */
+function speakerOf(beat: Beat | undefined): Speaker | undefined {
+  for (const c of beat?.cues ?? []) if ("who" in c) return c.who;
+  return undefined;
+}
+
+/** "[점장님]\n..." 처럼 대괄호로 시작하는 줄은 메시지 카드로. who 가 있으면 이름표를 붙인다 */
+function Line({ text, who, current }: { text: string; who?: Speaker; current: boolean }) {
   const m = /^\[([^\]]+)\]\n?([\s\S]*)$/.exec(text);
   if (m) {
     return (
@@ -339,5 +346,10 @@ function Line({ text, current }: { text: string; current: boolean }) {
       </span>
     );
   }
-  return <span className={`line${current ? " current" : ""}`}>{text}</span>;
+  return (
+    <span className={`line${current ? " current" : ""}`}>
+      {who && <span className="speaker">{SPEAKERS[who]}</span>}
+      {text}
+    </span>
+  );
 }
