@@ -5,8 +5,8 @@ import {
   applyChoice,
   decideType,
   enterNode,
-  extraLines,
   newGame,
+  nextOf,
   resolveLines,
   type Beat,
   type Choice,
@@ -14,7 +14,7 @@ import {
   type PersonalityType,
 } from "./game/engine";
 import { CUTS, SHOTS, type Cue, type CutId, type Place, type ShotId } from "./game/media";
-import { EXTRAS, NODES, START, TYPES } from "./game/script";
+import { NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
 import { PanoramaView } from "./view/PanoramaView";
@@ -131,11 +131,7 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   }, [place]);
 
   const node = NODES[game.node];
-  const beats = useMemo(() => {
-    const own = resolveLines(node.lines, game.vars, node.id);
-    const extra = node.ending ? extraLines(EXTRAS, node.ending, game.vars) : [];
-    return [...own, ...extra];
-  }, [node, game.vars]);
+  const beats = useMemo(() => resolveLines(node.lines, game.vars, node.id), [node, game.vars]);
   const lines = beats.map((b) => b.text);
   const done = lineIdx >= lines.length - 1;
   // CCTV 모달: 이 장면에서 지금 줄까지 마지막으로 연 화면. 장면이 바뀌면 닫힌다
@@ -179,6 +175,8 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     let alive = true;
     const waits: Promise<void>[] = [];
     for (const c of beats[lineIdx]?.cues ?? []) {
+      // 장면 중간에 시각이 바뀌는 줄 (시간 경과 몽타주 등)
+      if ("clock" in c) setClock(c.clock);
       const played = runSound(c, onLook);
       if (played && "sfx" in c && c.wait) waits.push(played);
     }
@@ -225,7 +223,8 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     if (waiting) return;
     if (!done) return setLineIdx((i) => i + 1);
     if (node.question) return;
-    goTo(enterNode(game, node), node.next ?? "RESULT");
+    const state = enterNode(game, node);
+    goTo(state, nextOf(node, state));
   }
 
   function choose(choice: Choice) {
@@ -305,6 +304,7 @@ function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null
     else if ("amb" in c) items.push(`환경음 ${c.amb}`);
     else if ("voice" in c) items.push(`목소리 ${c.voice}${c.via ? `(${c.via})` : ""} · ${beat?.take}`);
     else if ("door" in c) items.push(`출입문 ${c.door} (문 소리 + 바깥 빗소리)`);
+    else if ("clock" in c) items.push(`시각 ${c.clock}`);
   }
   if (!items.length) return null;
   return (

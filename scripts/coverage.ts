@@ -6,12 +6,13 @@
  * - 16가지 유형이 모두 나오는지, 한쪽으로 쏠리지 않는지
  * - 4가지 엔딩 분포
  */
-import { applyChoice, decideType, enterNode, newGame, type GameState } from "../src/game/engine.ts";
+import { applyChoice, decideType, enterNode, newGame, nextOf, type GameState } from "../src/game/engine.ts";
 import { NODES, START, TYPES } from "../src/game/script.ts";
 
 const errors: string[] = [];
 for (const node of Object.values(NODES)) {
-  const nexts = [node.next, ...(node.question?.choices.map((c) => c.next) ?? [])].filter(Boolean) as string[];
+  const next = typeof node.next === "object" ? Object.values(node.next) : [node.next];
+  const nexts = [...next, ...(node.question?.choices.map((c) => c.next) ?? [])].filter(Boolean) as string[];
   for (const id of nexts) if (id !== "RESULT" && !NODES[id]) errors.push(`${node.id} → 없는 장면 ${id}`);
   if (!node.next && !node.question) errors.push(`${node.id}: 다음 장면도 질문도 없음`);
 }
@@ -38,8 +39,9 @@ function walk(state: GameState) {
       return;
     }
     const next = enterNode(s, node);
-    if (!node.next || node.next === "RESULT") return record(next);
-    s = { ...next, node: node.next };
+    const to = nextOf(node, next);
+    if (to === "RESULT") return record(next);
+    s = { ...next, node: to };
   }
 }
 
@@ -52,7 +54,7 @@ function record(s: GameState) {
 
 walk(newGame(START));
 // 진실 공개 장면은 위에서 건너뛰었으니 따로 표시
-for (const id of ["TRUTH-01", "TRUTH-02", "TRUTH-03"]) visited.add(id);
+for (const id of ["TRUTH-01", "TRUTH-02", "TRUTH-WAIT", "TRUTH-RECORD", "TRUTH-EXIT", "TRUTH-CALL"]) visited.add(id);
 
 const pct = (n: number) => ((n / total) * 100).toFixed(1).padStart(5) + "%";
 console.log(`조합 ${total.toLocaleString()}개\n`);
