@@ -68,7 +68,8 @@ type Shot = Entry & {
 export const SHOTS = {
   "q2c-replay": { cam: "CAM1", mode: "replay", desc: "손님이 계산대 앞에서 한 발 물러난다. 카운터 아래는 가려져 안 보이고, 카운터 바깥 바닥을 길쭉한 그림자가 잠깐 스친다" },
   "q4d-replay": { cam: "CAM1", mode: "replay", desc: "직원이 음료 진열대로 자리를 비운 사이, 카운터 바깥 바닥에 검은 물체가 나타나 카운터 아래 가려진 공간으로 미끄러지듯 들어가 사라진다" },
-  "q7c-door": { cam: "CAM4", mode: "replay", desc: "05:48:12 마지막 손님이 나가고 문이 열린 채 3초. 05:48:15 아무도 지나가지 않았는데 문턱 안쪽 타일에 젖은 발자국 하나가 생긴다 (발끝은 매장 안쪽)" },
+  "q7c-door": { cam: "CAM4", mode: "replay", desc: "05:48:12 마지막 손님이 자동문을 나선다. 문이 열린 채 아무도 없는 출입구" },
+  "q7c-print": { cam: "CAM4", mode: "replay", desc: "05:48:15 같은 구도. 아무도 지나가지 않았는데 문턱 안쪽 타일에 젖은 발자국 하나가 생겨 있다 (발끝은 매장 안쪽)" },
   "q6a-capture": { cam: "CAM1", mode: "live", desc: "점장이 보낸 캡처. 계산대 앞에 고개 숙인 사람, 소매가 짙게 젖고 신발 주위 바닥이 어둡다 (실제 계산대 앞엔 영수증 한 장뿐)" },
   "q8-live": { cam: "CAM1", mode: "live", desc: "계산대 앞에 젖은 옷을 입은 사람이 고개를 숙이고 서 있다 (실제 계산대 앞은 비어 있음)" },
   "q8-live-up": { cam: "CAM1", mode: "live", desc: "그 사람이 고개를 들어 카메라를 본다" },
@@ -85,6 +86,7 @@ export const SHOTS = {
   "x-angle": { cam: "CAM1", mode: "saved", desc: "(추가 장면 EXTRA-03) 03:14 카운터 옆쪽으로 젖은 소매가 들어갔다가 사라진다. 하단은 사각지대" },
   "truth-door": { cam: "CAM4", mode: "saved", desc: "(END-EXIT, TRUTH-EXIT) 05:58:04 문이 닫히기 직전, 젖은 옷자락이 프레임을 지나간다" },
   "exit-0558": { cam: "CAM4", mode: "saved", desc: "(END-EXIT-IN, TRUTH-EXIT) 05:58:02 직원이 혼자 자동문을 나선다" },
+  "exit-0558-empty": { cam: "CAM4", mode: "saved", desc: "(END-EXIT-OUT) 05:58:04 아무도 없는 출입구에서 자동문이 열렸다가 닫힌다" },
   "exit-0549": { cam: "CAM4", mode: "saved", desc: "(END-EXIT-OUT, TRUTH-EXIT) 05:49:02 직원이 처마 아래로 나간다" },
   "call-twin-in": { cam: "CAM1", mode: "live", desc: "(END-CALL-IN 마지막) 카운터 옆에 휴대폰을 귀에 댄 직원, 바로 등 뒤에 젖은 소매의 사람이 같은 자세로 빈손을 귀에 대고 서 있다" },
   "call-twin-out": { cam: "CAM4", mode: "live", desc: "(END-CALL-OUT 마지막) 처마 아래 휴대폰을 귀에 댄 직원, 유리문 바로 안쪽에 젖은 소매의 사람이 같은 자세로 유리 한 장을 사이에 두고 등 뒤에 서 있다" },
@@ -121,7 +123,7 @@ export const FX = {
   footprint: { desc: "화장실 앞, 바깥쪽을 향한 젖은 발자국 하나" },
   "footprint-door": { desc: "출입문 근처의 같은 젖은 발자국" },
   "sign-restroom": { desc: "화장실 통로 사용 중지 안내판" },
-  "wet-floor-door": { desc: "자동문 안쪽 타일만 젖어 있고, 문 앞 매트와 우산꽂이는 말라 있음" },
+  "wet-floor-door": { desc: "매트에는 손님들이 묻혀 온 빗물 얼룩. 그와 이어지지 않고 매트에서 한 걸음 떨어진 마른 타일에서 시작해 매장 안쪽으로 난 젖은 자국" },
   "door-stuck": { desc: "자동문이 닫히지 않고 열려 있음" },
   "sensor-on": { desc: "자동문 위 센서 불이 켜짐" },
 } satisfies Record<string, Entry>;
@@ -207,6 +209,16 @@ export const PLACE_AMB: Record<Place, AmbId[]> = {
 };
 export type Place = "inside" | "outside";
 
+// ------------------------------------------------------------------ 말하는 사람
+
+/** 대사창 위에 붙는 이름표. 바이블의 '점장: / 나: / 손님:' 표기와 같다. 메시지 카드([점장님] …)와 회상 대사에는 안 붙인다 */
+export const SPEAKERS = {
+  manager: "점장",
+  player: "나",
+  guest: "손님",
+} as const;
+export type Speaker = keyof typeof SPEAKERS;
+
 // ------------------------------------------------------------------ 큐: 대본 줄 사이에 끼워 넣는 연출 지시
 
 /**
@@ -215,6 +227,7 @@ export type Place = "inside" | "outside";
  * - cctv: 모달을 열거나 장면을 바꾼다. null 이면 닫는다. 장면(노드)이 바뀌면 자동으로 닫힌다
  * - amb: 장소 기본 환경음 위에 덧씌운다. 장면이 바뀌면 풀린다
  * - photo: 휴대폰 화면(메신저·사진 앱) 안에 사진·영상을 띄운다. 지금은 자리만 잡혀 있다
+ * - who: 바로 다음 대사를 말하는 사람. 대사창에 이름표로 붙는다
  * - door: 출입문이 열리고 닫힌다. 문 소리와 문 너머 바깥 빗소리를 크로스페이드로 묶어 낸다 (src/door.ts).
  *   open 하면 빗소리가 장면이 바뀌어도 계속 이어지다가 close 때 잦아든다. close가 없으면 진행이 끝날 때까지.
  *   문 소리는 열 때만 낸다. 닫힐 때 문 소리가 필요하면 { sfx: "door-close" }를 따로 둔다
@@ -231,5 +244,6 @@ export type Cue =
   | { sfx: SfxId; wait?: boolean; walk?: [Spot, Spot] }
   | { amb: AmbId }
   | { photo: PhotoId }
+  | { who: Speaker }
   | { door: "open" | "close" }
   | { clock: string };

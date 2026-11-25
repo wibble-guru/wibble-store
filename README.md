@@ -69,6 +69,7 @@ pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·휴대�
 { sfx: "snack-drop" }, "툭.",
 { cut: "q1-pickup", hold: 4 }, "과자를 주워 제자리에 올려놓는다.",
 { cctv: "q2c-replay" }, { sfx: "cctv-rewind" }, "조금 전 영상으로 되돌린다.",
+{ who: "manager" }, "\"몇 시쯤이요?\"",
 { sfx: "msg" }, { photo: "q6c-frame" }, "점장이 멈췄던 한 프레임을 캡처해 보낸다.",
 ```
 
@@ -78,6 +79,7 @@ pnpm cues         # 연출 큐 시트 docs/CUES.md 생성 (컷씬·CCTV·휴대�
 | `cctv` | CCTV 모달을 열거나 화면을 바꾼다. `null`이면 닫는다. 장면이 바뀌면 자동으로 닫힌다 |
 | `fx` | 매장 화면 위에 얹는 연출 (터진 거품, 안내판, 발자국 …) |
 | `photo` | 휴대폰 화면(메신저·사진 앱) 안의 사진·영상 |
+| `who` | 다음 대사를 말하는 사람. 대사창에 이름표(점장·나·손님)로 붙는다. 메시지 카드와 회상 대사에는 안 붙인다 |
 | `sfx` / `amb` | 효과음 / 덧씌우는 환경음. 기본 환경음은 장소(`place`)가 정한다 |
 
 - 장면의 `place: "outside"`부터는 매장 밖이다(Q7-A, Q7-B, Q8-OUT, END-EXIT). **실외 배경은 아직 없다.**
