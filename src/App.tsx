@@ -13,11 +13,23 @@ import {
   type GameState,
   type PersonalityType,
 } from "./game/engine";
-import { CUTS, PHOTOS, SHOTS, SPEAKERS, type Cue, type CutId, type Place, type ShotId, type Speaker } from "./game/media";
+import {
+  BACKDROPS,
+  CUTS,
+  PHOTOS,
+  SHOTS,
+  SPEAKERS,
+  type BackdropId,
+  type Cue,
+  type CutId,
+  type Place,
+  type ShotId,
+  type Speaker,
+} from "./game/media";
 import { NODES, START, TYPES } from "./game/script";
 import { CctvMonitor } from "./view/CctvMonitor";
 import { Cutscene, preloadCuts } from "./view/Cutscene";
-import { PanoramaView } from "./view/PanoramaView";
+import { PanoramaView, preloadBackdrops } from "./view/PanoramaView";
 import { stopAllAudio } from "./audio";
 import { setListenerYaw, setSpatialCentered } from "./spatial";
 import { startBgm } from "./bgm";
@@ -39,6 +51,8 @@ export function App() {
   const { status, host } = useWibbleHost(game);
   const [phase, setPhase] = useState<Phase>({ kind: "title" });
   const [look, setLook] = useState<number>(SPOTS.counter);
+  // 장면이 바꿔 끼운 매장 배경 (pano 큐). null = 기본 배경
+  const [backdrop, setBackdrop] = useState<BackdropId | null>(null);
   // 배경음은 결과 전까지만. 다시 하기로 타이틀에 돌아오면 다시 켠다
   const over = phase.kind === "result";
   useEffect(() => (over ? undefined : startBgm()), [over]);
@@ -56,7 +70,7 @@ export function App() {
 
   return (
     <main className="game">
-      <PanoramaView lookDeg={look} onYaw={setListenerYaw} />
+      <PanoramaView backdrop={backdrop} lookDeg={look} onYaw={setListenerYaw} />
 
       {status === "connecting" && (
         <div className="overlay">
@@ -77,7 +91,7 @@ export function App() {
         </div>
       )}
 
-      {phase.kind === "play" && <Play onLook={setLook} onFinish={finish} />}
+      {phase.kind === "play" && <Play onLook={setLook} onBackdrop={setBackdrop} onFinish={finish} />}
 
       {phase.kind === "result" && (
         <div className="overlay">
@@ -117,8 +131,19 @@ export function App() {
   );
 }
 
+/** pano 큐의 afterSfx: 효과음이 끝나고 배경을 바꾸기까지 */
+const BACKDROP_AFTER_SFX_MS = 100;
+
 /** 장면 진행: 대사를 한 줄씩 넘기고, 끝나면 선택지 또는 다음 장면 */
-function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (s: GameState) => void }) {
+function Play({
+  onLook,
+  onBackdrop,
+  onFinish,
+}: {
+  onLook: (deg: number) => void;
+  onBackdrop: (id: BackdropId | null) => void;
+  onFinish: (s: GameState) => void;
+}) {
   const [game, setGame] = useState(() => newGame(START));
   const [lineIdx, setLineIdx] = useState(0);
   const [clock, setClock] = useState("02:00");
@@ -149,7 +174,24 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
     }
     return null;
   }, [beats, lineIdx]);
+  // 매장 배경: 이 장면에서 지금 줄까지 마지막 pano 큐. 장면이 바뀌거나 진행이 끝나면 기본 배경으로.
+  // afterSfx 큐는 지금 줄의 효과음이 끝난 뒤(soundDone)부터 친다. 줄을 넘기면 바로 친다
+  const [soundDone, setSoundDone] = useState<string | null>(null);
+  const backdrop = useMemo(() => {
+    let id: BackdropId | null = null;
+    beats.slice(0, lineIdx + 1).forEach((b, i) => {
+      for (const c of b.cues) {
+        if (!("pano" in c)) continue;
+        if (c.afterSfx && i === lineIdx && soundDone !== `${node.id}:${lineIdx}`) continue;
+        id = c.pano;
+      }
+    });
+    return id;
+  }, [beats, lineIdx, soundDone, node.id]);
+  useEffect(() => onBackdrop(backdrop), [backdrop]);
+  useEffect(() => () => onBackdrop(null), []);
   useEffect(preloadCuts, []);
+  useEffect(preloadBackdrops, []);
   useEffect(preloadSfx, []);
   // 출입문 소리를 미리 받고, 진행이 끝나면(결과·다시 하기) 남은 바깥 빗소리를 끈다
   useEffect(() => {
@@ -173,19 +215,31 @@ function Play({ onLook, onFinish }: { onLook: (deg: number) => void; onFinish: (
   useEffect(() => {
     if (entering) return;
     let alive = true;
+    let timer = 0;
     const waits: Promise<void>[] = [];
-    for (const c of beats[lineIdx]?.cues ?? []) {
+    const sounds: Promise<void>[] = [];
+    const cues = beats[lineIdx]?.cues ?? [];
+    for (const c of cues) {
       // 장면 중간에 시각이 바뀌는 줄 (시간 경과 몽타주 등)
       if ("clock" in c) setClock(c.clock);
       const played = runSound(c, onLook);
-      if (played && "sfx" in c && c.wait) waits.push(played);
+      if (played && "sfx" in c) {
+        sounds.push(played);
+        if (c.wait) waits.push(played);
+      }
     }
     if (waits.length) {
       setHeard(null);
       void Promise.all(waits).then(() => alive && setHeard(beatKey));
     }
+    // 효과음이 끝나고 0.1초 뒤에 배경을 바꾼다 (pano 큐의 afterSfx)
+    if (cues.some((c) => "pano" in c && c.afterSfx))
+      void Promise.all(sounds).then(() => {
+        if (alive) timer = window.setTimeout(() => setSoundDone(beatKey), BACKDROP_AFTER_SFX_MS);
+      });
     return () => {
       alive = false;
+      window.clearTimeout(timer);
     };
   }, [node.id, lineIdx, entering]);
   const waiting = entering || listening;
@@ -306,6 +360,8 @@ function CueDebug({ beat, cctv, cut, place }: { beat?: Beat; cctv: ShotId | null
     else if ("photo" in c) items.push(`휴대폰 화면 ${c.photo} — ${PHOTOS[c.photo].desc}`);
     else if ("door" in c) items.push(`출입문 ${c.door} (문 소리 + 바깥 빗소리)`);
     else if ("clock" in c) items.push(`시각 ${c.clock}`);
+    else if ("pano" in c)
+      items.push(`매장 배경 ${c.pano ? `${c.pano} — ${BACKDROPS[c.pano].desc}` : "기본"}${c.afterSfx ? " (효과음 끝나고 0.1초 뒤)" : ""}`);
   }
   if (!items.length) return null;
   return (

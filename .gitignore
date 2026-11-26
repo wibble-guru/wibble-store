@@ -6,3 +6,8 @@ dist
 !.env.example
 /.claude/
 *.asd
+
+# 3D 렌더 결과물 (3d/README.md 참고)
+/3d/renders/
+/3d/night_store.blend
+/3d/night_store.blend1

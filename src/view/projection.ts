@@ -1,7 +1,7 @@
 /**
  * 원통형 파노라마 → 화면 투영.
  *
- * 파노라마는 3D 블록아웃(annotation 저장소 `design/Game gate/night-store-scene/3d`)을
+ * 파노라마는 3D 블록아웃(`3d/build_store.py`)을
  * Blender 원통형 카메라로 렌더한 구도를 따른다(배경 그림은 그 렌더를 가이드로 생성). 화면의 픽셀마다 실제로 보는 방향을 계산해
  * 파노라마에서 색을 가져오므로, 휘어 있던 직선이 다시 곧게 펴진다.
  *
@@ -21,7 +21,8 @@ export const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0., 1.
 
 export const FRAG = `
 precision highp float;
-uniform sampler2D tex;
+uniform sampler2D tex, tex2; // 지금 그림, 디졸브로 넘어갈 그림
+uniform float mixv;           // 0 = tex, 1 = tex2
 uniform vec2 res;
 uniform float f, cy, yaw, d;
 uniform vec4 pano; // uMin, uMax, vTop, vBot
@@ -37,7 +38,7 @@ void main(){
   float u = (lon - pano.x) / (pano.y - pano.x);
   float t = (pano.z - v) / (pano.z + pano.w);
   if (u < 0. || u > 1. || t < 0. || t > 1.) { gl_FragColor = vec4(.04, .08, .09, 1.); return; }
-  gl_FragColor = texture2D(tex, vec2(u, t));
+  gl_FragColor = mix(texture2D(tex, vec2(u, t)), texture2D(tex2, vec2(u, t)), mixv);
 }`;
 
 /** 화면 가로 위치 x(초점거리 단위)에 해당하는 경도 */
