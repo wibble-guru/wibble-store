@@ -36,7 +36,6 @@ type Sound = Entry & {
  * - 파일이 없으면 빈 화면(자리 표시)
  */
 export const CUTS = {
-  "q1-pickup": { desc: "떨어진 과자봉지를 주워 선반 한참 안쪽에 밀어 넣는다. 돌아서려는 순간 같은 봉지가 옆 봉지와 함께 발치에 떨어진다" },
   "q1a-box": { desc: "과자 두 봉지를 계산대 아래 검수함에 넣고 뚜껑을 닫는다" },
   "q2a-under": { desc: "직원 쪽에서 계산대 아래를 살핀다. 전선·박스 사이, 통로 가까운 바닥에 물방울 세 개" },
   "q4-phone": { desc: "계산대 아래 검은 휴대폰을 집어 든다. 사진 앱에 열린 사진 속에 지금의 내가 찍혀 있다" },
@@ -112,7 +111,6 @@ export type PhotoId = keyof typeof PHOTOS;
 // ------------------------------------------------------------------ 매장 화면 위 연출 (배경은 그대로, 위에 얹는 그림·움직임)
 
 export const FX = {
-  "snack-floor": { desc: "과자 진열대 앞 바닥에 떨어진 과자봉지" },
   "can-burst": { desc: "음료 냉장고 유리 안쪽에 터진 탄산 거품이 흘러내림" },
   handprint: { desc: "거품 사이 유리 안쪽에 남은 다섯 갈래 손가락 자국 (손바닥 부분은 거의 없음)" },
   "finger-slide": { desc: "가장 긴 손가락 자국이 아래로 늘어나 있고 그 자국만 위쪽이 깨끗이 지워져 있음 (사진 비교 컷. 움직이는 모습은 보여주지 않음)" },
@@ -128,6 +126,18 @@ export const FX = {
   "sensor-on": { desc: "자동문 위 센서 불이 켜짐" },
 } satisfies Record<string, Entry>;
 export type FxId = keyof typeof FX;
+
+// ------------------------------------------------------------------ 매장 배경 바꿔 끼우기
+
+/**
+ * 매장 파노라마의 다른 상태. 그림은 src/assets/store/pano_<id>.webp (view/PanoramaView.tsx).
+ * pano.webp와 같은 구도·크기(2016×780)로 만든 원통형 파노라마여야 하고, 시선을 돌려도 그대로 따라온다
+ */
+export const BACKDROPS = {
+  wSnack: { desc: "과자 진열대 앞 통로 바닥에 떨어진 과자봉지 하나" },
+  wSnacks: { desc: "과자 진열대 앞 통로 바닥에 떨어진 과자봉지 두 개" },
+} satisfies Record<string, Entry>;
+export type BackdropId = keyof typeof BACKDROPS;
 
 // ------------------------------------------------------------------ 효과음
 
@@ -236,6 +246,8 @@ export type Speaker = keyof typeof SPEAKERS;
  * - sfx에 walk: [출발, 도착]을 주면 걸음(SFX의 steps)마다 소리 위치를 출발 → 도착으로 옮기고
  *   시선도 걷는 사람을 따라 돌린다. 매장 안 장면에서만 쓴다
  * - clock: 장면 중간에 화면 위 시각을 바꾼다 (시간 경과 몽타주, END-WAIT의 05:59)
+ * - pano: 매장 배경을 BACKDROPS의 그림으로 바꿔 끼운다(짧은 디졸브). null 이면 기본 배경. 장면이 바뀌면 기본 배경으로 돌아온다.
+ *   afterSfx: true 면 같은 줄의 효과음이 끝나고 0.1초 뒤에 바꾼다 (떨어지는 소리 → 바닥에 봉지)
  */
 export type Cue =
   | { cut: CutId; hold?: number }
@@ -246,4 +258,5 @@ export type Cue =
   | { photo: PhotoId }
   | { who: Speaker }
   | { door: "open" | "close" }
-  | { clock: string };
+  | { clock: string }
+  | { pano: BackdropId | null; afterSfx?: boolean };

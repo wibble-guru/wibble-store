@@ -7,7 +7,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolveLines, type Beat } from "../src/game/engine.ts";
-import { AMB, CAMS, CUTS, FX, PHOTOS, PLACE_AMB, SFX, SHOTS, type Cue } from "../src/game/media.ts";
+import { AMB, BACKDROPS, CAMS, CUTS, FX, PHOTOS, PLACE_AMB, SFX, SHOTS, type Cue } from "../src/game/media.ts";
 import { NODES } from "../src/game/script.ts";
 
 type Use = { scene: string; text: string; beat: Beat; cue: Cue };
@@ -72,6 +72,8 @@ out.push("");
 section("CCTV 장면", SHOTS, (c) => ("cctv" in c ? c.cctv : null), (id) => ` · **${SHOTS[id].cam} ${SHOTS[id].mode}**`);
 section("휴대폰 사진·영상 화면", PHOTOS, (c) => ("photo" in c ? c.photo : null));
 section("매장 화면 위 연출", FX, (c) => ("fx" in c ? c.fx : null));
+out.push("## 매장 배경 그림 파일\n", "`src/assets/store/pano_<id>.webp`. `pano.webp`와 같은 구도·크기(2016×780). 큐 `pano: null`은 기본 배경으로 되돌린다.", "");
+section("매장 배경", BACKDROPS, (c) => ("pano" in c ? c.pano : null));
 section("효과음", SFX, (c) => ("sfx" in c ? c.sfx : null));
 
 out.push(

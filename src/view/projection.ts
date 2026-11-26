@@ -21,7 +21,8 @@ export const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0., 1.
 
 export const FRAG = `
 precision highp float;
-uniform sampler2D tex;
+uniform sampler2D tex, tex2; // 지금 그림, 디졸브로 넘어갈 그림
+uniform float mixv;           // 0 = tex, 1 = tex2
 uniform vec2 res;
 uniform float f, cy, yaw, d;
 uniform vec4 pano; // uMin, uMax, vTop, vBot
@@ -37,7 +38,7 @@ void main(){
   float u = (lon - pano.x) / (pano.y - pano.x);
   float t = (pano.z - v) / (pano.z + pano.w);
   if (u < 0. || u > 1. || t < 0. || t > 1.) { gl_FragColor = vec4(.04, .08, .09, 1.); return; }
-  gl_FragColor = texture2D(tex, vec2(u, t));
+  gl_FragColor = mix(texture2D(tex, vec2(u, t)), texture2D(tex2, vec2(u, t)), mixv);
 }`;
 
 /** 화면 가로 위치 x(초점거리 단위)에 해당하는 경도 */
